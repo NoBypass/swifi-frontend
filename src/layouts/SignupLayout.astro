@@ -1,0 +1,55 @@
+---
+import { ViewTransitions } from 'astro:transitions';
+import Layout from "./Layout.astro";
+import Card from "../components/Card.astro";
+
+const { className } = Astro.props;
+
+const anim = {
+    old: {
+        name: 'shortSlide',
+        duration: '0.2s',
+        easing: 'ease-in',
+        direction: 'reverse',
+    },
+    new: {
+        name: 'shortSlide',
+        duration: '0.2s',
+        easing: 'ease-in-out',
+    },
+};
+
+
+const shortSlide = {
+    forwards: anim,
+    backwards: anim,
+};
+---
+
+<ViewTransitions />
+<Layout title="swifi">
+    <div class="absolute bg-dots-black w-full h-screen -z-40 opacity-20 bg-neutral-100"
+         style="mask-image:radial-gradient(circle, black 0%, transparent 50%);">
+    </div>
+
+    <main class="grid grid-cols-3 grid-rows-3 h-screen">
+        <Card>
+            <div transition:animate={shortSlide} class={`grid text-center ${className}`}>
+                <slot />
+            </div>
+        </Card>
+    </main>
+</Layout>
+
+<style>
+    @keyframes shortSlide {
+        0% {
+            opacity: 0;
+            transform: translateX(200px);
+        }
+        100% {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+</style>

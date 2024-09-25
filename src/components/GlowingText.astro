@@ -1,0 +1,17 @@
+---
+const { text, className } = Astro.props
+---
+
+<p class="absolute text-3xl font-bold text-white z-10">{text}</p>
+<p class="absolute text-3xl font-bold bg-clip-text bg-gradient-to-r from-indigo-500 to-amber-500 text-transparent blur-sm">
+    {text}
+</p>
+<p class="absolute text-3xl font-bold bg-clip-text bg-gradient-to-r from-indigo-500 to-amber-500 text-transparent blur-sm">
+    {text}
+</p>
+
+<style>
+    h1 {
+        filter: drop-shadow(0 1px 1px rgba(0,0,0,0.1));
+    }
+</style>

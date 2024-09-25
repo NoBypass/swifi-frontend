@@ -1,0 +1,11 @@
+---
+const { orientation = 'horizontal' } = Astro.props;
+---
+
+<div class={`flex items-center ${orientation === 'vertical' ? 'flex-col h-full' : 'w-full'}`}>
+    <div class={`flex-1 ${orientation === 'vertical' ? 'border-r h-1/2' : 'border-b'}`}></div>
+    <div class="bg-white p-2 text-neutral-400">
+        <slot class="mx-2" />
+    </div>
+    <div class={`flex-1 ${orientation === 'vertical' ? 'border-r h-1/2' : 'border-b'}`}></div>
+</div>

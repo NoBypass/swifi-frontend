@@ -1,0 +1,46 @@
+---
+import Layout from '../layouts/Layout.astro';
+import FancyButton from '../components/dynamic/FancyButton.svelte'
+---
+
+<Layout title="swifi">
+	<main>
+		<div class="absolute bg-dots-black w-full h-[75vh] -z-40 opacity-20"
+			 style="mask-image:radial-gradient(ellipse at top, black 0%, transparent 75%);"></div>
+		<div class="absolute w-full h-[75vh] -z-50">
+			<div class="absolute w-full h-full opacity-15 gradient-1"></div>
+			<div class="absolute w-full h-full gradient-2"></div>
+		</div>
+		<header class="grid grid-cols-3 grid-rows-3 h-[75vh]">
+			<h1 class="col-start-2 row-start-2 text-center text-4xl font-bold text-black">Unkomplizierte Übersicht über <p class="inline underline decoration-indigo-400 decoration-4 underline-offset-4">alle</p> deine Finanzen</h1>
+			<div class="col-start-2 row-start-2 justify-self-center mt-16">
+				<FancyButton client:load>Start your free trial</FancyButton>
+			</div>
+		</header>
+	</main>
+</Layout>
+
+<style>
+	.gradient-2 {
+		background: linear-gradient(40deg,
+			white 10%,
+			transparent 100%);
+	}
+	.gradient-1 {
+		background: linear-gradient(150deg,
+			white 0%,
+			white 28%,
+		rgba(0, 0, 0, 0.7) 33%,
+			white 38%,
+			white 43%,
+		rgba(0, 0, 0, 0.7) 48%,
+			white 53%,
+			white 49%,
+		rgba(0, 0, 0, 0.3) 54%,
+			white 59%,
+			white 64%,
+		rgba(0, 0, 0, 0.4) 69%,
+			white 74%,
+			white 100%);
+	}
+</style>
