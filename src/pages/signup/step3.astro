@@ -1,13 +1,13 @@
 ---
 import SignupSteps from "../../components/dynamic/complex/SignupSteps.svelte";
-import PasskeySetup from "../../components/dynamic/complex/PasskeySetup.svelte";
+import PasskeyLogin from "../../components/dynamic/complex/PasskeyLogin.svelte";
 import Button from "../../components/dynamic/Button.svelte";
 import SignupLayout from "../../layouts/SignupLayout.astro";
 ---
 
 <SignupLayout>
     <div class="flex h-32" transition:name="steps">
-        <a href="/signup/step1">
+        <a href="/signup/step2">
             <Button class="absolute w-10 px-1.5 mt-8 ml-4" style="transparent">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
@@ -16,7 +16,10 @@ import SignupLayout from "../../layouts/SignupLayout.astro";
         </a>
         <SignupSteps currStep={1} />
     </div>
-    <section class="mt-16 grid gap-6">
-        <PasskeySetup client:load />
+    <section class="mt-16 grid gap-6 grid">
+        <p>Now that your Passkey is set up, let try logging in with it!</p>
+        <div class="flex gap-2 flex-col justify-center">
+            <PasskeyLogin client:load />
+        </div>
     </section>
 </SignupLayout>

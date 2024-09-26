@@ -24,6 +24,9 @@ export default {
 				'loader-linear-spin': 'loader-spin .8s linear infinite',
 				'loader-ease-spin': 'loader-spin .8s ease infinite',
 			},
+			borderWidth: {
+				'3': '3px',
+			},
 		},
 	},
 	plugins: [

@@ -9,7 +9,7 @@
     export let id = ''
     export let description = ''
     export let descriptionColor: 'neutral' | 'error' = 'neutral'
-    export let color: 'primary' | 'success' | 'error' = 'primary'
+    export let color: 'primary' | 'success' | 'error' | 'warn' = 'primary'
     export let maxlength = 64
 
     export { className as class }
@@ -23,7 +23,8 @@
     const colors = {
         primary: 'border-neutral-400 has-[:focus]:border-indigo-500 outline-indigo-300',
         success: 'border-emerald-600 has-[:focus]:border-emerald-500 outline-emerald-300',
-        error: 'border-rose-600 has-[:focus]:border-rose-500 outline-rose-300'
+        error: 'border-rose-600 has-[:focus]:border-rose-500 outline-rose-300',
+        warn: 'border-amber-600 has-[:focus]:border-amber-500 outline-amber-300'
     }
 
     const descColors = {
