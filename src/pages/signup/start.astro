@@ -1,23 +1,10 @@
 ---
-import Button from "../../components/dynamic/Button.svelte";
-import SignupSteps from "../../components/dynamic/complex/SignupSteps.svelte";
-import GlowingText from "../../components/GlowingText.astro";
+import SignupForm from "@components/dynamic/complex/SignupForm.svelte";
 import SignupLayout from "../../layouts/SignupLayout.astro";
 ---
 
-<div class="absolute bg-dots-black w-full h-screen -z-40 opacity-20 bg-neutral-100"
-     style="mask-image:radial-gradient(circle, black 0%, transparent 75%);">
-</div>
-
-<SignupLayout className="gap-2">
-    <div transition:name="steps">
-        <SignupSteps transition:name="steps" />
-    </div>
-    <div class="flex flex-col justify-end items-center h-full mt-12">
-        <GlowingText className="font-bold text-3xl" text="Welcome to the setup!" />
-    </div>
-    <p class="px-12 text-neutral-600 mt-16">You can skip most setup steps, complete them later or skip them entirely if you want.</p>
-    <a class="justify-self-center mt-4" href="/signup/step1">
-        <Button client:load animate={true} href="/signup/step1" class="h-9">Let's go!</Button>
-    </a>
+<SignupLayout class="gap-2" step={0}>
+    <h1 class="font-bold text-xl">Let's set up your Account</h1>
+    <p class="w-3/4 text-neutral-600">Anything you enter here can be changed later.</p>
+    <SignupForm client:load />
 </SignupLayout>

@@ -6,7 +6,7 @@
     let className: string = '';
     export {className as class};
     export let animate: boolean = false;
-    export let style: 'primary' | 'secondary' | 'transparent' = 'primary';
+    export let kind: 'primary' | 'secondary' | 'transparent' = 'primary';
     export let disabled: boolean = false;
 
     let offset = 0;
@@ -25,7 +25,7 @@
         return () => clearInterval(intervalId);
     });
 
-    $: aniation = animate && !hovered ? `background: linear-gradient(70deg, #6366f1 ${offset - width}%, #818cf8 ${offset}%, #6366f1 ${offset + width}%)` : '';
+    $: animation = animate && !hovered ? `background: linear-gradient(70deg, #6366f1 ${offset - width}%, #818cf8 ${offset}%, #6366f1 ${offset + width}%)` : '';
 
     onDestroy(() => {
         clearInterval(intervalId);
@@ -34,7 +34,7 @@
     const styles = {
         primary: 'hover:bg-indigo-600 bg-indigo-500 text-white',
         secondary: 'hover:bg-neutral-300 bg-neutral-200 text-neutral-800 border border-neutral-300',
-        transparent: 'bg-transparent text-neutral-800 *:stroke-neutral-400 *:hover:stroke-neutral-500'
+        transparent: 'hover:bg-neutral-100 bg-transparent text-neutral-800 *:stroke-neutral-400 *:hover:stroke-neutral-500'
     };
 </script>
 
@@ -42,7 +42,7 @@
         on:mouseleave={() => hovered = false}
         on:click={() => dispatch('click')}
         disabled={disabled}
-        class={twMerge(`${disabled ? 'bg-neutral-200 text-neutral-400' : `${styles[style]} hover:scale-105`} px-5 py-1.5 rounded-md transition-transform duration-150 ease-in-out`, className)}
-        style={aniation}>
+        class={twMerge(`${disabled ? 'bg-neutral-200 text-neutral-400' : `${styles[kind]} hover:scale-105`} px-5 py-1.5 rounded-md transition-transform duration-150 ease-in-out`, className)}
+        style={animation}>
     <slot />
 </button>

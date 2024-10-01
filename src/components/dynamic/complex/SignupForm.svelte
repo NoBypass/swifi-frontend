@@ -2,29 +2,23 @@
     import Input from "../Input.svelte";
     import Button from "../Button.svelte";
     import { navigate } from 'astro:transitions/client';
-    import Loader from "../Loader.svelte";
-
-    const apiUrl = import.meta.env.PUBLIC_API_URL;
+    import {Checkbox} from "@components/ui/checkbox";
+    import {Label} from "@components/ui/label";
+    import Info from "@components/dynamic/complex/Info.svelte";
 
     let name = '';
     let nameError = '';
     let nameBlurred = false;
     let nameColor: 'primary' | 'success' | 'error' = 'primary';
 
-    let email = '';
-    let emailError = '';
-    let emailBlurred = false;
-    let emailColor: 'primary' | 'success' | 'error' | 'warn' = 'primary';
-    let awaitingResponse = false;
-
+    let stayLogged = false;
     let isButtonDisabled = true;
 
     $: if (name != undefined && nameBlurred) validateName();
-    $: if (email != undefined && emailBlurred) validateEmail();
 
     function validateName() {
-        if (name.length < 3) {
-            nameError = 'Name must be at least 3 characters long';
+        if (name === '') {
+            nameError = 'Please enter your name';
             nameColor = 'error';
         } else {
             nameError = '';
@@ -32,64 +26,36 @@
         }
     }
 
-    async function validateEmail() {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(email)) {
-            emailError = 'Please enter a valid email address';
-            emailColor = 'error';
-        } else {
-            awaitingResponse = true;
-            emailColor = 'warn';
-            let response = await fetch(`${apiUrl}/auth/already-used?email=${email}`);
-            if (!response.ok) {
-                let body = await response.json();
-                emailError = body.message;
-                emailColor = 'error';
-            } else {
-                emailColor = 'success';
-                emailError = '';
-            }
-            awaitingResponse = false;
-        }
-    }
-
-    $: isButtonDisabled = nameError !== '' || name === '' || awaitingResponse || emailError !== '' || email === '';
+    $: isButtonDisabled = nameError !== '' || name === '';
 
     function handleSubmit(event: any) {
         event.preventDefault();
         if (!isButtonDisabled) {
-            navigate(`/signup/step2?name=${name.replace(" ", "+")}&email=${email}`);
+            navigate(`/signup/step1?name=${name.replace(" ", "+")}&stayLogged=${stayLogged}`);
         }
     }
 </script>
 
-<form class="px-48" on:submit={handleSubmit}>
-    <Input
-            placeholder="What would you like to be called?"
-            label="Enter your name"
-            maxlength={32}
-            bind:value={name}
-            on:blur={() => nameBlurred = true}
-            color={nameColor}
-            description={nameError}
-            descriptionColor="error"
-            class="mb-4 mt-4"/>
-    <Input
-            placeholder="Enter your email address"
-            label="Enter your email"
-            maxlength={128}
-            bind:value={email}
-            on:blur={() => emailBlurred = true}
-            color={emailColor}
-            description={emailError}
-            descriptionColor="error"
-            class="mb-10">
-        <div slot="end" class="h-7 grid place-content-center">
-            {#if awaitingResponse}
-                <Loader borderB="border-b-amber-500" />
-            {/if}
-        </div>
-    </Input>
+<form on:submit={handleSubmit}>
+    <Input placeholder="What would you like to be called?"
+           storageId="signup_name"
+           label="Enter your name"
+           maxlength={32}
+           bind:value={name}
+           on:blur={() => nameBlurred = true}
+           color={nameColor}
+           description={nameError}
+           descriptionColor="error"
+           class="mb-7 mt-4"/>
+    <div class="flex gap-2 items-center mb-6">
+        <Checkbox id="stayLogged" bind:checked={stayLogged} />
+        <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
+    </div>
 
-    <Button disabled={isButtonDisabled}>Continue</Button>
+    <Button class="w-full flex gap-2 justify-center" disabled={isButtonDisabled}>
+        Continue
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
+        </svg>
+    </Button>
 </form>

@@ -1,4 +1,6 @@
 ---
+import "@styles/app.css";
+
 interface Props {
 	title: string;
 }
@@ -20,12 +22,3 @@ const { title } = Astro.props;
 		<slot />
 	</body>
 </html>
-
-<style>
-	@font-face {
-		font-family: 'SF Pro Display';
-		src: url('/sfpro.otf') format('opentype');
-		font-weight: normal;
-		font-style: normal;
-	}
-</style>

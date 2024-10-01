@@ -1,8 +1,9 @@
 <script lang="ts">
-    import { createEventDispatcher } from 'svelte';
+    import {createEventDispatcher, onMount} from 'svelte';
     const dispatch = createEventDispatcher()
 
     let className = ''
+    export let storageId = ''
     export let placeholder = ''
     export let value = ''
     export let label = ''
@@ -11,6 +12,7 @@
     export let descriptionColor: 'neutral' | 'error' = 'neutral'
     export let color: 'primary' | 'success' | 'error' | 'warn' = 'primary'
     export let maxlength = 64
+    export let censorFn: (value: string) => string = (value) => value
 
     export { className as class }
 
@@ -19,6 +21,7 @@
     let focused = false
     let cd = false
     let caretPos = 0
+    let mounted = false
 
     const colors = {
         primary: 'border-neutral-400 has-[:focus]:border-indigo-500 outline-indigo-300',
@@ -32,8 +35,16 @@
         error: 'text-rose-500'
     }
 
+    onMount(() => {
+        if (storageId !== '') {
+            value = localStorage.getItem(storageId) || ''
+        }
+        mounted = true
+    })
+
     $: {
         if (value !== '' && inputElem) {
+            value = censorFn(value);
             valWidth = Math.min(textWidth(value), inputElem.clientWidth);
             cd = true;
             setTimeout(() => {
@@ -42,6 +53,10 @@
         } else {
             valWidth = 0;
         }
+    }
+
+    $: if (storageId !== '' && mounted) {
+        localStorage.setItem(storageId, value);
     }
 
     function textWidth(text: string) {
