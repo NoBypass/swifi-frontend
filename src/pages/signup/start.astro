@@ -1,10 +1,10 @@
 ---
 import SignupForm from "@components/dynamic/complex/SignupForm.svelte";
-import SignupLayout from "../../layouts/SignupLayout.astro";
+import AuthLayout from "../../layouts/AuthLayout.astro";
 ---
 
-<SignupLayout class="gap-2" step={0}>
+<AuthLayout class="gap-2" step={0}>
     <h1 class="font-bold text-xl">Let's set up your Account</h1>
     <p class="w-3/4 text-neutral-600">Anything you enter here can be changed later.</p>
     <SignupForm client:load />
-</SignupLayout>
+</AuthLayout>

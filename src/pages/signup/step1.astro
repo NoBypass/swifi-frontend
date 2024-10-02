@@ -1,8 +1,8 @@
 ---
 import PasskeySetup from "../../components/dynamic/complex/PasskeySetup.svelte";
-import SignupLayout from "../../layouts/SignupLayout.astro";
+import AuthLayout from "../../layouts/AuthLayout.astro";
 ---
 
-<SignupLayout step={1} class="flex flex-col gap-2">
+<AuthLayout step={1} class="flex flex-col gap-2">
     <PasskeySetup client:load />
-</SignupLayout>
+</AuthLayout>
