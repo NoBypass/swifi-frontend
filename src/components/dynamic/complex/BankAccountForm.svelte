@@ -2,7 +2,9 @@
     import {Button} from "@components/ui/button";
     import Input from "../Input.svelte";
     import Selector from "@components/dynamic/complex/Selector.svelte";
+    import { navigate } from "astro:transitions/client";
     import {onMount} from "svelte";
+    import {navigator} from "@util/navigator";
 
     const apiUrl = import.meta.env.PUBLIC_API_URL;
 
@@ -10,6 +12,7 @@
     let accountName = "";
     let balance = "";
     let currencies: any[] = [];
+    let error = "";
     let accounts: {
         name: string;
         balance: string;
@@ -36,7 +39,34 @@
     onMount(async () => {
         currencies = await getCurrencies();
         accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
+
+        const to = await navigator(apiUrl)
+        if (to) navigate(to);
     });
+
+    async function addAccounts() {
+        error = "";
+        const response = await fetch(`${apiUrl}/bank-account/init`, {
+            credentials: "include",
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify([...accounts.map((a) => {
+                return {
+                    name: a.name.trim(),
+                    balance: Number(a.balance),
+                    currency: a.currency,
+                };
+            })]),
+        });
+        if (!response.ok) {
+            error = (await response.json()).message;
+        } else {
+            localStorage.removeItem("accounts");
+            navigate("/dashboard");
+        }
+    }
 
     function censorFn(value: string) {
         value = value.replace(/[^0-9.]/g, "");
@@ -108,7 +138,7 @@
     {/each}
 </section>
 <form on:submit={handleSubmit} class="flex flex-col gap-4 items-center py-4">
-    <Input bind:value={accountName} label="Account Name" placeholder="e.g. Savings" class="w-full" />
+    <Input bind:value={accountName} label="Account Name or IBAN" placeholder="e.g. Savings" class="w-full" />
     <div class="w-full grid grid-cols-[1fr_auto] gap-3 items-end">
         <Input {censorFn} bind:value={balance} label="Current Balance" placeholder="(optional)" class="w-full" />
         <Selector bind:value={selectedCurrency} placeholder="Search for Currency..." heading="Currencies" data={currencies} />
@@ -122,10 +152,11 @@
         Add Bank Account
     </Button>
     <br>
-    <Button class="w-full flex gap-2 justify-center" disabled={finishButtonDisabled}>
+    <Button class="w-full flex gap-2 justify-center" disabled={finishButtonDisabled} on:click={addAccounts}>
         Finish
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />
         </svg>
     </Button>
+    <p class="text-red-500 text-sm">{error}</p>
 </form>

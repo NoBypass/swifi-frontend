@@ -1,4 +1,6 @@
 ---
+export const prerender = true;
+
 import { ViewTransitions } from 'astro:transitions';
 import Layout from "./Layout.astro";
 
@@ -40,14 +42,14 @@ const shortSlide = {
 ---
 
 <ViewTransitions />
-<Layout title={`swifi - ${isLogin ? 'login' : 'signup'}`}>
+<Layout title={`swifi - ${isLogin ? 'login' : 'setup'}`}>
     <main class="grid 2xl:grid-cols-4 lg:grid-cols-3 md:grid-cols-2 h-screen">
         <section class="p-4 grid grid-rows-[auto_1fr_auto] gap-2">
             <header class="flex justify-between items-center">
                 <h1 class="font-bold text-lg">Swifi</h1>
                 {
                     isLogin ?
-                              <p class="font-normal text-xs text-neutral-400">Dont have an Account? <a href="/signup/start" class="text-black underline">Sign Up</a></p>
+                              <p class="font-normal text-xs text-neutral-400">Dont have an Account? <a href="/src/pages/setup/start" class="text-black underline">Sign Up</a></p>
                             : <p class="font-normal text-xs text-neutral-400">Already have an Account? <a href="/login" class="text-black underline">Log In</a></p>
                 }
             </header>

@@ -1,0 +1,41 @@
+---
+import DashboardLayout from "../../../layouts/DashboardLayout.astro";
+
+const session = Astro.cookies.get('session')
+if (!session) {
+    Astro.redirect('/login');
+}
+
+const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/bank-account/all`, {
+    credentials: "include",
+    headers: {
+        'Cookie': `session=${session!.value}`
+    }
+});
+
+let bankAccounts: {
+    message: string;
+} | {
+    name: string;
+    balance: number;
+    currency: {
+        iso_code: string;
+    }
+}[] = await response.json();
+console.log(bankAccounts);
+---
+
+<DashboardLayout active="accounts" class="grid grid-cols-3">
+    {Array.isArray(bankAccounts) ? bankAccounts.map(account => (
+            <div class="border border-neutral-300 bg-neutral-50 p-4 rounded-2xl h-32">
+                <h2 class="font-bold text-lg">{account.name}</h2>
+                <div class="flex flex-col">
+                    <p class="text-neutral-400">{account.currency.iso_code}</p>
+                </div>
+                <div class="flex flex-col items-end">
+                    <h3 class="font-bold">{account.balance}</h3>
+                    <p class="text-neutral-400">Balance</p>
+                </div>
+            </div>
+    )) : <p>{bankAccounts.message}</p>}
+</DashboardLayout>
