@@ -1,8 +1,0 @@
----
-export const prerender = false;
-
-const session = Astro.cookies.get('session')
-if (!session) {
-    Astro.redirect('/login')
-}
----

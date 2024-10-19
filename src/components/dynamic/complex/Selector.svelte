@@ -10,8 +10,12 @@
     export let value = ""
 
     let open = false
+    let selectedValue = ""
 
-    $: selectedValue = data.find((f) => f.name === value)?.name ?? "Currency";
+    $: {
+        const name = data.find((f) => f.name === value)?.name ?? "Currency";
+        selectedValue = name === "" ? "Currency" : name;
+    }
 
     function closeAndFocusTrigger(triggerId: string) {
         open = false;

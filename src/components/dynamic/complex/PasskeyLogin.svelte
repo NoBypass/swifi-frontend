@@ -1,13 +1,12 @@
 <script lang="ts">
     import Button from "../Button.svelte";
-    import {base64ToBase64url, fixBase64url} from "@util/strings";
-    import type {PublicKeyCredentialWithAssertion} from "@util/types";
     import { navigate } from "astro:transitions/client";
     import {Checkbox} from "@components/ui/checkbox";
     import {Label} from "@components/ui/label";
     import Info from "@components/dynamic/complex/Info.svelte";
     import {onMount} from "svelte";
-    import {navigator} from "@util/navigator";
+    import {sessionRedirect} from "@util/sessionRedirect";
+    import {parseLoginAssertion, parseLoginOptions, type PublicKeyCredentialWithAssertion} from "@api/auth";
 
     const apiUrl = import.meta.env.PUBLIC_API_URL;
 
@@ -15,16 +14,15 @@
     let stayLogged = false;
 
     onMount(async () => {
-        navigate(await navigator(apiUrl))
+        const to = await sessionRedirect(apiUrl)
+        if (to) navigate(to)
     });
 
     async function login() {
         const response = await fetch(`${apiUrl}/auth/login-options`, {
             credentials: "include",
         });
-        const options = await response.json();
-
-        options.challenge = Uint8Array.from(atob(fixBase64url(options.challenge)), c => c.charCodeAt(0));
+        const options = parseLoginOptions(await response.json());
 
         const assertion: PublicKeyCredentialWithAssertion | null = await navigator.credentials.get({
             publicKey: options
@@ -37,17 +35,7 @@
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                id: assertion.id,
-                rawId: base64ToBase64url(btoa(String.fromCharCode(...new Uint8Array(assertion.rawId)))),
-                type: assertion.type,
-                response: {
-                    clientDataJSON: base64ToBase64url(btoa(String.fromCharCode(...new Uint8Array(assertion.response.clientDataJSON)))),
-                    authenticatorData: base64ToBase64url(btoa(String.fromCharCode(...new Uint8Array(assertion.response.authenticatorData)))),
-                    signature: base64ToBase64url(btoa(String.fromCharCode(...new Uint8Array(assertion.response.signature)))),
-                    userHandle: assertion.response.userHandle ? base64ToBase64url(btoa(String.fromCharCode(...new Uint8Array(assertion.response.userHandle)))) : null
-                }
-            })
+            body: JSON.stringify(parseLoginAssertion(assertion))
         });
 
         if (!loginResponse.ok) {
@@ -57,6 +45,8 @@
         const user = await loginResponse.json();
         if (user.setupStep !== -1) {
             navigate(`/signup/step${user.setupStep}`);
+        } else {
+            navigate(`/dashboard/overview`);
         }
     }
 

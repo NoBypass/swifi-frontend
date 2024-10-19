@@ -4,34 +4,25 @@
     import Selector from "@components/dynamic/complex/Selector.svelte";
     import { navigate } from "astro:transitions/client";
     import {onMount} from "svelte";
-    import {navigator} from "@util/navigator";
+    import {sessionRedirect} from "@util/sessionRedirect";
+    import {moneyRegex} from "@util/strings";
+    import {type Currency, getCurrencies} from "@api/currency";
+    import {createBankAccounts} from "@api/bankAccount";
 
     const apiUrl = import.meta.env.PUBLIC_API_URL;
+
+    // TODO make it possible to provide currency but not balance and make error messages more descriptive
 
     let selectedCurrency = "";
     let accountName = "";
     let balance = "";
-    let currencies: any[] = [];
+    let currencies: Currency[] = [];
     let error = "";
     let accounts: {
         name: string;
         balance: string;
         currency: string;
     }[] = [];
-
-    async function getCurrencies() {
-        const response = await fetch(`${apiUrl}/static/currencies`, {
-            credentials: "include",
-        });
-        let data = await response.json();
-        return data.map((currency: {
-            iso_code: string;
-        }) => {
-            return {
-                name: currency.iso_code,
-            };
-        });
-    }
 
     $: addButtonDisabled = accountName === "" || (selectedCurrency === "" && balance !== "");
     $: finishButtonDisabled = accounts.length === 0;
@@ -40,47 +31,26 @@
         currencies = await getCurrencies();
         accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
 
-        const to = await navigator(apiUrl)
+        const to = await sessionRedirect(apiUrl)
         if (to) navigate(to);
     });
 
     async function addAccounts() {
         error = "";
-        const response = await fetch(`${apiUrl}/bank-account/init`, {
-            credentials: "include",
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify([...accounts.map((a) => {
-                return {
-                    name: a.name.trim(),
-                    balance: Number(a.balance),
-                    currency: a.currency,
-                };
-            })]),
-        });
+        const response = await createBankAccounts([...accounts.map((a) => {
+            return {
+                name: a.name.trim(),
+                balance: Number(a.balance),
+                currency: a.currency,
+            };
+        })])
+
         if (!response.ok) {
             error = (await response.json()).message;
         } else {
             localStorage.removeItem("accounts");
-            navigate("/dashboard");
+            navigate("/dashboard/overview");
         }
-    }
-
-    function censorFn(value: string) {
-        value = value.replace(/[^0-9.]/g, "");
-
-        const parts = value.split(".");
-        if (parts.length > 2) {
-            value = parts[0] + "." + parts.slice(1).join("");
-        }
-
-        if (parts[1]) {
-            value = parts[0] + "." + parts[1].slice(0, 2);
-        }
-
-        return value;
     }
 
     function handleSubmit(event: Event) {
@@ -140,7 +110,7 @@
 <form on:submit={handleSubmit} class="flex flex-col gap-4 items-center py-4">
     <Input bind:value={accountName} label="Account Name or IBAN" placeholder="e.g. Savings" class="w-full" />
     <div class="w-full grid grid-cols-[1fr_auto] gap-3 items-end">
-        <Input {censorFn} bind:value={balance} label="Current Balance" placeholder="(optional)" class="w-full" />
+        <Input censorFn={moneyRegex} bind:value={balance} label="Current Balance" placeholder="(optional)" class="w-full" />
         <Selector bind:value={selectedCurrency} placeholder="Search for Currency..." heading="Currencies" data={currencies} />
     </div>
     <Button variant="secondary" class="w-full mt-2" type="submit" disabled={addButtonDisabled}>

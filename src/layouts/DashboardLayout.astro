@@ -4,6 +4,7 @@ export const prerender = true;
 import { ViewTransitions } from 'astro:transitions';
 import { Badge } from "@components/ui/badge";
 import Layout from "./Layout.astro";
+import Logout from "@components/Logout.svelte";
 
 const { class: className = '', active = "overview" } = Astro.props;
 
@@ -43,6 +44,7 @@ function classFn(route: string): string {
         <ul class="*:flex *:gap-2 text-neutral-500">
             <li>Settings</li>
             <li>Profile</li>
+            <li><Logout client:load /></li>
         </ul>
     </nav>
     <main class={`border-l border-neutral-300 bg-white ${className}`}>

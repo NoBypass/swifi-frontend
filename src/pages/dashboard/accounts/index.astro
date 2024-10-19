@@ -1,9 +1,32 @@
 ---
 import DashboardLayout from "../../../layouts/DashboardLayout.astro";
+import CreateAccount from "./CreateAccount.svelte"
+import {getSetupStep} from "@api/user";
 
 const session = Astro.cookies.get('session')
 if (!session) {
-    Astro.redirect('/login');
+    return new Response(
+        null,
+        {
+            status: 301,
+            headers: {
+                'Location': '/login'
+            }
+        }
+    );
+}
+
+const setupStep = await getSetupStep(session.value)
+if (setupStep !== -1) {
+    return new Response(
+        null,
+        {
+            status: 301,
+            headers: {
+                'Location': `/setup/step${setupStep}`
+            }
+        }
+    );
 }
 
 const response = await fetch(`${import.meta.env.PUBLIC_API_URL}/bank-account/all`, {
@@ -22,20 +45,14 @@ let bankAccounts: {
         iso_code: string;
     }
 }[] = await response.json();
-console.log(bankAccounts);
 ---
 
-<DashboardLayout active="accounts" class="grid grid-cols-3">
+<DashboardLayout active="accounts" class="flex flex-wrap gap-4 p-4">
     {Array.isArray(bankAccounts) ? bankAccounts.map(account => (
-            <div class="border border-neutral-300 bg-neutral-50 p-4 rounded-2xl h-32">
-                <h2 class="font-bold text-lg">{account.name}</h2>
-                <div class="flex flex-col">
-                    <p class="text-neutral-400">{account.currency.iso_code}</p>
-                </div>
-                <div class="flex flex-col items-end">
-                    <h3 class="font-bold">{account.balance}</h3>
-                    <p class="text-neutral-400">Balance</p>
-                </div>
+            <div class="border border-neutral-300 bg-neutral-50 p-4 rounded-2xl h-24 w-64">
+                <h2 class="font-bold text-xl">{account.name}</h2>
+                <p>{account.balance} {account.currency.iso_code}</p>
             </div>
     )) : <p>{bankAccounts.message}</p>}
+    <CreateAccount client:load />
 </DashboardLayout>

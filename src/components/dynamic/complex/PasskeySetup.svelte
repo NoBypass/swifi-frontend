@@ -1,10 +1,10 @@
 <script lang="ts">
     import Button from "../Button.svelte";
     import {onMount} from "svelte";
-    import {base64ToBase64url, fixBase64url, title} from "../../../util/strings";
-    import type {PublicKeyCredentialWithTransports} from "../../../util/types";
+    import {title} from "@util/strings";
     import { navigate } from "astro:transitions/client";
     import Loader from "@components/dynamic/Loader.svelte";
+    import {parseSignupCredential, parseSignupOptions, type PublicKeyCredentialWithTransports} from "@api/auth";
 
     const apiUrl = import.meta.env.PUBLIC_API_URL;
 
@@ -24,19 +24,12 @@
         const response = await fetch(`${apiUrl}/auth/signup-options?name=${name.replace(" ", "+")}`, {
             credentials: 'include'
         });
-        const options = await response.json();
-
-        options.challenge = Uint8Array.from(atob(fixBase64url(options.challenge)), c => c.charCodeAt(0));
-        options.user.id = Uint8Array.from(atob(fixBase64url(options.user.id)), c => c.charCodeAt(0));
+        const options = parseSignupOptions(await response.json());
 
         const credential: PublicKeyCredentialWithTransports | null = await navigator.credentials.create({
             publicKey: options
         }) as PublicKeyCredentialWithTransports;
         if (!credential) return
-
-        const rawIdBase64Url = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
-        const clientDataJSONBase64Url = btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON)));
-        const attestationObjectBase64Url = btoa(String.fromCharCode(...new Uint8Array(credential.response.attestationObject)));
 
         const signupResponse = await fetch(`${apiUrl}/auth/signup?stayLogged=${stayLogged}`, {
             credentials: "include",
@@ -44,15 +37,7 @@
             headers: {
                 "Content-Type": "application/json"
             },
-            body: JSON.stringify({
-                id: credential.id,
-                rawId: base64ToBase64url(rawIdBase64Url),
-                type: credential.type,
-                response: {
-                    clientDataJSON: base64ToBase64url(clientDataJSONBase64Url),
-                    attestationObject: base64ToBase64url(attestationObjectBase64Url)
-                },
-            })
+            body: JSON.stringify(parseSignupCredential(credential))
         });
 
         if (!signupResponse.ok) {
@@ -64,7 +49,7 @@
         error = '';
         try {
             await register();
-            navigate(`/signup/step2`);
+            navigate(`/setup/step2`);
         } catch (e) {
             error = 'An error occurred. Please try again. ' + e
         }

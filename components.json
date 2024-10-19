@@ -7,8 +7,8 @@
 		"baseColor": "neutral"
 	},
 	"aliases": {
-		"components": "@components",
-		"utils": "@util"
+		"components": "./src/components/ui/",
+		"utils": "@util/shadcn"
 	},
 	"typescript": true
 }

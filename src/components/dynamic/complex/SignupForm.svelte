@@ -31,7 +31,7 @@
     function handleSubmit(event: any) {
         event.preventDefault();
         if (!isButtonDisabled) {
-            navigate(`/signup/step1?name=${name.replace(" ", "+")}&stayLogged=${stayLogged}`);
+            navigate(`/setup/step1?name=${name.replace(" ", "+")}&stayLogged=${stayLogged}`);
         }
     }
 </script>
