@@ -4,7 +4,7 @@
     import {cn} from "@util/shadcn";
     import {Button, buttonVariants} from "@components/ui/button";
     import Input from "@components/dynamic/Input.svelte";
-    import Selector from "@components/dynamic/complex/Selector.svelte";
+    import Selector from "@components/Selector.svelte";
     import {moneyRegex} from "@util/strings";
     import {type Currency, getCurrencies} from "@api/currency";
     import {onMount} from "svelte";

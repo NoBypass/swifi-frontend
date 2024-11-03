@@ -1,7 +1,7 @@
 <script lang="ts">
     import {Button} from "@components/ui/button";
-    import Input from "../Input.svelte";
-    import Selector from "@components/dynamic/complex/Selector.svelte";
+    import Input from "@components/dynamic/Input.svelte";
+    import Selector from "@components/Selector.svelte";
     import { navigate } from "astro:transitions/client";
     import {onMount} from "svelte";
     import {sessionRedirect} from "@util/sessionRedirect";

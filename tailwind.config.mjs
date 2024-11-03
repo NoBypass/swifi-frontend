@@ -8,6 +8,7 @@ const config = {
 	theme: {
 		fontFamily: {
 			sans: ["SF\\ Pro", "sans-serif"],
+			mono: ["SF\\ Mono", "monospace"],
 		},
 		container: {
 			center: true,

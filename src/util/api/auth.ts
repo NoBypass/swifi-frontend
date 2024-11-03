@@ -1,4 +1,4 @@
-import {asBase64url, fixBase64url} from "@util/encryption";
+import {asBase64url, fixBase64url} from "@util/encryption/util";
 
 const apiUrl = import.meta.env.PUBLIC_API_URL;
 
@@ -59,14 +59,20 @@ export function parseSignupCredential(credential: PublicKeyCredentialWithTranspo
     }
 }
 
-export function parseSignupOptions(options: any): any {
+export function parseSignupOptions(options: any): PublicKeyCredentialCreationOptions {
     options.challenge = Uint8Array.from(atob(fixBase64url(options.challenge)), c => c.charCodeAt(0));
     options.user.id = Uint8Array.from(atob(fixBase64url(options.user.id)), c => c.charCodeAt(0));
+    if (options.extensions?.prf?.eval?.first) {
+        options.extensions.prf.eval.first = new TextEncoder().encode(options.extensions.prf.eval.first);
+    }
     return options;
 }
 
 export function parseLoginOptions(options: any): any {
     options.challenge = Uint8Array.from(atob(fixBase64url(options.challenge)), c => c.charCodeAt(0));
+    if (options.extensions?.prf?.eval?.first) {
+        options.extensions.prf.eval.first = new TextEncoder().encode(options.extensions.prf.eval.first);
+    }
     return options;
 }
 
@@ -74,4 +80,46 @@ export async function logout(): Promise<Response> {
     return fetch(`${apiUrl}/auth/logout`, {
         credentials: "include",
     });
+}
+
+type Safe = {
+    salt: string,
+    data: string
+}
+
+type EncryptionSetup = {
+    token: Safe,
+    tokenEncryptedKey: Safe,
+    passkeyEncryptedKey: Safe
+}
+
+export async function setupEncryption(data: EncryptionSetup): Promise<Response> {
+    return fetch(`${apiUrl}/auth/setup-encryption`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data),
+        credentials: "include"
+    });
+}
+
+export async function getPasskeyEncryptionOptions(): Promise<{
+    tokenSalt: string,
+    prf: PublicKeyCredentialRequestOptions
+}> {
+    const response = fetch(`${apiUrl}/auth/encryption-options?prf=true`, {
+        credentials: "include"
+    });
+    return response.then(r => r.json());
+}
+
+export async function getPasswordEncryptionOptions(): Promise<{
+    tokenSalt: string,
+    prf: PublicKeyCredentialRequestOptions
+}> {
+    const response = fetch(`${apiUrl}/auth/encryption-options?prf=false`, {
+        credentials: "include"
+    });
+    return response.then(r => r.json());
 }

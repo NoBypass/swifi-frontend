@@ -1,0 +1,8 @@
+---
+import BankAccountForm from "./BankAccountForm.svelte";
+import AuthLayout from "../../layouts/AuthLayout.astro";
+---
+
+<AuthLayout step={2}>
+    <BankAccountForm client:load />
+</AuthLayout>

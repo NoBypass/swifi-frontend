@@ -1,6 +1,6 @@
 <script lang="ts">
     import {Button} from "@components/ui/button";
-    import * as Tooltip from "@components/ui/tooltip/index.js";
+    import * as Tooltip from "@components/ui/tooltip";
 
     export let text: string;
 </script>
