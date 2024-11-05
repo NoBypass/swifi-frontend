@@ -1,6 +1,6 @@
 const apiUrl = import.meta.env.PUBLIC_API_URL;
 
-export async function getSetupStep(sessionCookie?: string): Promise<number> {
+export async function getSetupStep(sessionCookie?: string): Promise<number|undefined> {
     let headers = {};
     if (sessionCookie) {
         headers = {

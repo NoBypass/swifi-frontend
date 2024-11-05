@@ -4,6 +4,7 @@
     import {parseSignupCredential, parseSignupOptions, type PublicKeyCredentialWithTransports} from "@api/auth";
     import {type PRFExtension, supportsPRF} from "@util/encryption/util";
     import * as Alert from "@components/ui/alert";
+    import * as Icon from "@components/ui/icon";
     import {Button} from "@components/ui/button";
     import {Checkbox} from "@components/ui/checkbox";
     import Info from "@components/Info.svelte";
@@ -16,7 +17,7 @@
     let awaiting = false;
 
     async function register() {
-        const response = await fetch(`${apiUrl}/auth/signup-options}`, {
+        const response = await fetch(`${apiUrl}/auth/signup-options`, {
             credentials: 'include'
         });
         const options = parseSignupOptions(await response.json());
@@ -77,14 +78,12 @@
 {/if}
 <p class="w-3/4 text-neutral-600">To stay secure, we use passkeys for authentication. Let's set your passkey up!</p>
 <div class="h-32 text-center flex flex-col gap-2">
-    <div class="flex gap-2 items-center mb-6">
+    <div class="flex gap-2 items-center">
         <Checkbox id="stayLogged" bind:checked={stayLogged} />
         <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
     </div>
     <Button class="mt-4" on:click={handleClick}>
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="size-6 fill-neutral-100 stroke-neutral-500">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
-        </svg>
+        <Icon.Passkey />
         <p class="w-16">Set up</p>
         {#if awaiting}
             <Loader borderB="border-b-white" class="justify-self-end"/>

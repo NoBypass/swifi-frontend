@@ -123,3 +123,37 @@ export async function getPasswordEncryptionOptions(): Promise<{
     });
     return response.then(r => r.json());
 }
+
+export async function getRegistrationOptions(mode: 'pass'): Promise<{ salt: string }>;
+export async function getRegistrationOptions(mode: 'key'): Promise<PublicKeyCredentialCreationOptions>;
+export async function getRegistrationOptions(mode: 'pass' | 'key'): Promise<PublicKeyCredentialCreationOptions | { salt: string }> {
+    const response = await fetch(`${apiUrl}/auth/registration-options?mode=${mode}`, {
+        credentials: "include"
+    });
+    return response.json();
+}
+
+export async function register(data: {
+    encryptedKey: number[],
+    credential: PublicKeyCredential
+} | {
+    encryptedKey: number[],
+    hash: number[]
+    email: string,
+}, stayLoggedIn: boolean): Promise<Response> {
+    let mode: 'key' | 'pass';
+    if ("credential" in data) {
+        mode = 'key';
+    } else {
+        mode = 'pass';
+    }
+
+    return fetch(`${apiUrl}/auth/register?stayLogged=${stayLoggedIn}&mode=${mode}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data),
+        credentials: "include"
+    });
+}

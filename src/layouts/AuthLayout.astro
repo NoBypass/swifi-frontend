@@ -1,10 +1,9 @@
 ---
-export const prerender = true;
-
-// TODO implement auto redirect to correct step or dashboard
+export const prerender = false
 
 import { ViewTransitions } from 'astro:transitions';
 import Layout from "./Layout.astro";
+import {getSetupStep} from "@api/user";
 
 const { class: className = '', step = 0, isLogin = false } = Astro.props;
 const steps = [
@@ -21,6 +20,7 @@ const steps = [
         title: "Adding Bank Accounts",
     }
 ];
+
 const anim = {
     old: {
         name: 'shortSlide',
@@ -40,6 +40,13 @@ const shortSlide = {
     forwards: anim,
     backwards: anim,
 };
+
+// const session = Astro.cookies.get('session')
+// if (!session) return redirectResponse('/login');
+//
+// const setupStep = await getSetupStep(session.value)
+// if (setupStep === -1) return redirectResponse('/dashboard/overview');
+// else if (setupStep != step) return redirectResponse(`/setup/step${setupStep}`);
 ---
 
 <ViewTransitions />

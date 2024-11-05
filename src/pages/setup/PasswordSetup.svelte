@@ -6,9 +6,14 @@
     import {deriveKey, encryptAESKey, generateAESKey, generateSalt, hashSHA256} from "@util/encryption/keys";
     import {passwordError} from "./setupStore";
     import ErrorAlert from "@components/ErrorAlert.svelte";
+    import {getRegistrationOptions, register} from "@api/auth";
+    import {Checkbox} from "@components/ui/checkbox";
+    import Info from "@components/Info.svelte";
 
     const apiUrl = import.meta.env.PUBLIC_API_URL;
     const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    let stayLogged = false;
 
     let email = '';
     let emailBlurred = false;
@@ -30,24 +35,19 @@
     $: canContinue = match && email.length > 0 && mailRegex.test(email);
 
     async function handleContinue() {
-        const salt = await generateSalt(32)
-        const derivedKey = await deriveKey(new TextEncoder().encode(password), salt)
+        const opts = await getRegistrationOptions("pass")
+
+        const derivedKey = await deriveKey(
+            new TextEncoder().encode(password),
+            new TextEncoder().encode(opts.salt))
         const key = await generateAESKey()
         const encryptedKey = await encryptAESKey(derivedKey, key)
 
-        const response = await fetch(`${apiUrl}/auth/setup-encryption`, {
-            credentials: "include",
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                isPrf: false,
-                encryptedKey: Array.from(new TextEncoder().encode(encryptedKey)),
-                passwordSalt: Array.from(salt),
-                passwordHash: Array.from(await hashSHA256(password) as Uint8Array),
-            })
-        });
+        const response = await register({
+            encryptedKey: Array.from(new TextEncoder().encode(encryptedKey)),
+            hash: Array.from(new Uint8Array(await hashSHA256(password))),
+            email: email,
+        }, stayLogged)
 
         if (!response.ok) {
             passwordError.set("An error occurred while setting up encryption. Please try again.");
@@ -77,7 +77,11 @@
 
     <div class="flex flex-col gap-1">
         <Label for="password">Password</Label>
-        <Input id="password" bind:value={password} type="password" placeholder="A strong, unique Password" />
+        <Input id="password"
+               bind:value={password}
+               type="password"
+               autocomplete="new-password"
+               placeholder="A strong, unique Password" />
         {#if strongPassword}
             <p class="text-rose-600 text-sm">{strongPassword}</p>
         {/if}
@@ -85,10 +89,19 @@
 
     <div class="flex flex-col gap-1">
         <Label for="confirm">Confirm Password</Label>
-        <Input id="confirm" bind:value={confirm} type="password" placeholder="Type your Password again" />
+        <Input id="confirm"
+               bind:value={confirm}
+               type="password"
+               autocomplete="new-password"
+               placeholder="Type your Password again" />
         {#if !match && confirm.length > 0}
             <p class="text-rose-600 text-sm">Passwords don't match</p>
         {/if}
+    </div>
+
+    <div class="flex gap-2 items-center mb-6">
+        <Checkbox id="stayLogged" bind:checked={stayLogged} />
+        <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
     </div>
 
     <Button disabled={!canContinue} on:click={handleContinue}>Continue</Button>
