@@ -2,10 +2,13 @@
     import * as Alert from "@components/ui/alert";
     import type {PreinitializedWritableAtom} from "nanostores";
 
-    export let store: PreinitializedWritableAtom<string>;
+    export let store: PreinitializedWritableAtom<string> | undefined = undefined;
+    export let error: string | undefined = undefined;
+
+    $: data = $store || error || "";
 </script>
 
-{#if $store !== ""}
+{#if data !== ""}
     <Alert.Root variant="error">
         <Alert.Title class="font-bold flex gap-2 items-center">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stroke-rose-600 size-5">

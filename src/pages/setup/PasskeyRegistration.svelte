@@ -1,55 +1,38 @@
 <script lang="ts">
     import { navigate } from "astro:transitions/client";
     import Loader from "@components/dynamic/Loader.svelte";
-    import {parseSignupCredential, parseSignupOptions, type PublicKeyCredentialWithTransports} from "@api/auth";
+    import {
+        getRegistrationOptions,
+        parseSignupCredential,
+        type PublicKeyCredentialWithTransports
+    } from "@api/auth";
     import {type PRFExtension, supportsPRF} from "@util/encryption/util";
     import * as Alert from "@components/ui/alert";
     import * as Icon from "@components/ui/icon";
     import {Button} from "@components/ui/button";
-    import {Checkbox} from "@components/ui/checkbox";
-    import Info from "@components/Info.svelte";
-    import {Label} from "@components/ui/label";
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL;
-
-    let stayLogged = false;
     let error = '';
     let awaiting = false;
 
-    async function register() {
-        const response = await fetch(`${apiUrl}/auth/signup-options`, {
-            credentials: 'include'
-        });
-        const options = parseSignupOptions(await response.json());
+    async function handleRegistration() {
+        const opts = await getRegistrationOptions("key");
 
         const credential: PublicKeyCredentialWithTransports | null = await navigator.credentials.create({
-            publicKey: options
+            publicKey: opts
         }) as PublicKeyCredentialWithTransports;
         if (!credential) return null;
         if (!supportsPRF(credential.getClientExtensionResults() as PRFExtension)) {
             throw new Error("The authenticator you used does not yet support a required feature. Try using a different authenticator or use password-based authentication.");
         }
 
-        const signupResponse = await fetch(`${apiUrl}/auth/signup?stayLogged=${stayLogged}`, {
-            credentials: "include",
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(parseSignupCredential(credential))
-        });
-
-        if (!signupResponse.ok) {
-            // TODO improve error handling
-            throw new Error(`${signupResponse.status}`);
-        }
+        localStorage.setItem("registrationCredential", JSON.stringify(parseSignupCredential(credential)));
     }
 
     async function handleClick() {
         error = '';
         awaiting = true;
         try {
-            await register();
+            await handleRegistration();
             navigate(`/setup/step2`);
         } catch (e) {
             if (!(e instanceof Error)) {
@@ -64,7 +47,6 @@
     }
 </script>
 
-<h1 class="text-xl font-bold">Welcome</h1>
 {#if error !== ''}
     <Alert.Root variant="error">
         <Alert.Title class="font-bold flex gap-2 items-center">
@@ -76,12 +58,9 @@
         <Alert.Description class="leading-tight">{error}</Alert.Description>
     </Alert.Root>
 {/if}
-<p class="w-3/4 text-neutral-600">To stay secure, we use passkeys for authentication. Let's set your passkey up!</p>
+<h1 class="text-xl font-bold">Welcome to Swifi</h1>
+<p class="text-neutral-600 leading-tight">To stay secure, we use passkeys for authentication. Let's set your passkey up!</p>
 <div class="h-32 text-center flex flex-col gap-2">
-    <div class="flex gap-2 items-center">
-        <Checkbox id="stayLogged" bind:checked={stayLogged} />
-        <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
-    </div>
     <Button class="mt-4" on:click={handleClick}>
         <Icon.Passkey />
         <p class="w-16">Set up</p>

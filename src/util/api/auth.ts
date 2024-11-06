@@ -23,7 +23,7 @@ export type LoginResponse = {
     }
 }
 
-export type SignupResponse = {
+export type RegistrationResponse = {
     id: string
     rawId: string
     type: string
@@ -47,7 +47,7 @@ export function parseLoginAssertion(assertion: PublicKeyCredentialWithAssertion)
     }
 }
 
-export function parseSignupCredential(credential: PublicKeyCredentialWithTransports): SignupResponse {
+export function parseSignupCredential(credential: PublicKeyCredentialWithTransports): RegistrationResponse {
     return {
         id: credential.id,
         rawId: asBase64url(credential.rawId),
@@ -93,49 +93,23 @@ type EncryptionSetup = {
     passkeyEncryptedKey: Safe
 }
 
-export async function setupEncryption(data: EncryptionSetup): Promise<Response> {
-    return fetch(`${apiUrl}/auth/setup-encryption`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(data),
-        credentials: "include"
-    });
-}
-
-export async function getPasskeyEncryptionOptions(): Promise<{
-    tokenSalt: string,
-    prf: PublicKeyCredentialRequestOptions
-}> {
-    const response = fetch(`${apiUrl}/auth/encryption-options?prf=true`, {
-        credentials: "include"
-    });
-    return response.then(r => r.json());
-}
-
-export async function getPasswordEncryptionOptions(): Promise<{
-    tokenSalt: string,
-    prf: PublicKeyCredentialRequestOptions
-}> {
-    const response = fetch(`${apiUrl}/auth/encryption-options?prf=false`, {
-        credentials: "include"
-    });
-    return response.then(r => r.json());
-}
-
 export async function getRegistrationOptions(mode: 'pass'): Promise<{ salt: string }>;
 export async function getRegistrationOptions(mode: 'key'): Promise<PublicKeyCredentialCreationOptions>;
 export async function getRegistrationOptions(mode: 'pass' | 'key'): Promise<PublicKeyCredentialCreationOptions | { salt: string }> {
     const response = await fetch(`${apiUrl}/auth/registration-options?mode=${mode}`, {
         credentials: "include"
     });
-    return response.json();
+    const data = await response.json();
+    if (mode === 'pass') {
+        return data;
+    } else {
+        return parseSignupOptions(data);
+    }
 }
 
 export async function register(data: {
     encryptedKey: number[],
-    credential: PublicKeyCredential
+    credential: RegistrationResponse,
 } | {
     encryptedKey: number[],
     hash: number[]
@@ -156,4 +130,11 @@ export async function register(data: {
         body: JSON.stringify(data),
         credentials: "include"
     });
+}
+
+export async function getAuthenticationOptions(): Promise<PublicKeyCredentialRequestOptions> {
+    const response = await fetch(`${apiUrl}/auth/authentication-options`, {
+        credentials: "include"
+    });
+    return parseLoginOptions(await response.json());
 }

@@ -4,7 +4,9 @@ import {redirectResponse} from "@util/astro";
 
 export const onRequest = defineMiddleware(async (context, next) => {
     if (context.url.pathname.startsWith('/setup')) {
-        if (context.url.pathname.endsWith('step1') || context.url.pathname.endsWith('password')) return next();
+        if (context.url.pathname.endsWith('step1') ||
+            context.url.pathname.endsWith('password') ||
+            context.url.pathname.endsWith('step2')) return next();
         const session = context.cookies.get('session');
         if (!session) return redirectResponse('/setup/step1');
 
@@ -15,7 +17,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         }
 
         const step = parseInt(context.url.pathname.slice(-1));
-        if (setupStep === -1) return redirectResponse('/login');
+        if (setupStep === -1) return redirectResponse('/dashboard/overview');
         else if (setupStep != step) return redirectResponse(`/setup/step${setupStep}`);
     }
     return next();
