@@ -109,14 +109,14 @@ export async function getRegistrationOptions(mode: 'pass' | 'key', email: string
 
 type PasswordRegistration = {
     encryptedKey: number[],
+    iv: number[],
     hash: number[],
-    email: string
 }
 
 export async function register(data: PublicKeyCredentialWithTransports | PasswordRegistration, stayLoggedIn: boolean): Promise<Response> {
     let mode: 'key' | 'pass';
     let sendingData: RegistrationResponse | PasswordRegistration;
-    if ("email" in data) {
+    if ("hash" in data) {
         mode = 'pass';
         sendingData = data;
     } else {
@@ -146,7 +146,7 @@ type PasswordResponse = {
     email: string,
 }
 
-export async function authenticate(data: PublicKeyCredentialWithAssertion | PasswordResponse, stayLogged: boolean, key: number[], iv: number[]): Promise<Response> {
+export async function authenticate(data: PublicKeyCredentialWithAssertion | PasswordResponse, stayLogged: boolean, key?: number[], iv?: number[]): Promise<Response> {
     let authResponse: AuthenticationResponse | PasswordResponse;
     if ("hash" in data) {
         authResponse = data;
@@ -172,8 +172,8 @@ export async function authenticate(data: PublicKeyCredentialWithAssertion | Pass
         },
         body: JSON.stringify({
             ...authResponse,
-            encryptedKey: key,
-            iv: iv
+            encryptedKey: key || null,
+            iv: iv || null
         }),
         credentials: "include"
     });

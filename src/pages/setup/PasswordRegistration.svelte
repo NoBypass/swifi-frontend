@@ -3,7 +3,7 @@
     import {Label} from "@components/ui/label";
     import {Button} from "@components/ui/button";
     import {navigate} from "astro:transitions/client";
-    import {deriveKey, encryptAESKey, generateAESKey, hashSHA256} from "@util/encryption/keys";
+    import {deriveKey, encryptAESKey, generateAESKey, hashSHA256, saveKey} from "@util/encryption/keys";
     import {passwordError} from "./setupStore";
     import ErrorAlert from "@components/ErrorAlert.svelte";
     import {getRegistrationOptions, register} from "@api/auth";
@@ -52,8 +52,7 @@
             return;
         }
 
-        localStorage.setItem("encryptionKey", new TextDecoder().decode(key));
-
+        saveKey(key);
         navigate("/setup/step3");
     }
 </script>
@@ -85,7 +84,7 @@
         {/if}
     </div>
 
-    <div class="flex gap-2 items-center mb-2">
+    <div class="w-full flex gap-2 items-center justify-center mb-2">
         <Checkbox id="stayLogged" bind:checked={stayLogged} />
         <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
     </div>
