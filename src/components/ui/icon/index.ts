@@ -1,6 +1,8 @@
 import { type VariantProps, tv } from "tailwind-variants";
 
 import Passkey from './passkey.svelte';
+import Right from './right.svelte';
+import Password from './password.svelte';
 
 export const iconVariants = tv({
     base: "inline-block",
@@ -32,5 +34,7 @@ export type Props = {
 };
 
 export {
-    Passkey
+    Passkey,
+    Right,
+    Password,
 };

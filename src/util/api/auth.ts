@@ -11,7 +11,7 @@ export type PublicKeyCredentialWithAssertion = PublicKeyCredential & {
     response: AuthenticatorAssertionResponse;
 };
 
-export type LoginResponse = {
+export type AuthenticationResponse = {
     id: string
     rawId: string
     type: string
@@ -33,7 +33,7 @@ export type RegistrationResponse = {
     }
 }
 
-export function parseLoginAssertion(assertion: PublicKeyCredentialWithAssertion): LoginResponse {
+export function parseLoginAssertion(assertion: PublicKeyCredentialWithAssertion): AuthenticationResponse {
     return {
         id: assertion.id,
         rawId: asBase64url(assertion.rawId),
@@ -93,10 +93,10 @@ type EncryptionSetup = {
     passkeyEncryptedKey: Safe
 }
 
-export async function getRegistrationOptions(mode: 'pass'): Promise<{ salt: string }>;
-export async function getRegistrationOptions(mode: 'key'): Promise<PublicKeyCredentialCreationOptions>;
-export async function getRegistrationOptions(mode: 'pass' | 'key'): Promise<PublicKeyCredentialCreationOptions | { salt: string }> {
-    const response = await fetch(`${apiUrl}/auth/registration-options?mode=${mode}`, {
+export async function getRegistrationOptions(mode: 'pass', email: string): Promise<{ salt: string }>;
+export async function getRegistrationOptions(mode: 'key', email: string): Promise<PublicKeyCredentialCreationOptions>;
+export async function getRegistrationOptions(mode: 'pass' | 'key', email: string): Promise<PublicKeyCredentialCreationOptions | { salt: string }> {
+    const response = await fetch(`${apiUrl}/auth/registration-options?mode=${mode}&email=${email}`, {
         credentials: "include"
     });
     const data = await response.json();
@@ -107,19 +107,21 @@ export async function getRegistrationOptions(mode: 'pass' | 'key'): Promise<Publ
     }
 }
 
-export async function register(data: {
+type PasswordRegistration = {
     encryptedKey: number[],
-    credential: RegistrationResponse,
-} | {
-    encryptedKey: number[],
-    hash: number[]
-    email: string,
-}, stayLoggedIn: boolean): Promise<Response> {
+    hash: number[],
+    email: string
+}
+
+export async function register(data: PublicKeyCredentialWithTransports | PasswordRegistration, stayLoggedIn: boolean): Promise<Response> {
     let mode: 'key' | 'pass';
-    if ("credential" in data) {
-        mode = 'key';
-    } else {
+    let sendingData: RegistrationResponse | PasswordRegistration;
+    if ("email" in data) {
         mode = 'pass';
+        sendingData = data;
+    } else {
+        mode = 'key';
+        sendingData = parseSignupCredential(data);
     }
 
     return fetch(`${apiUrl}/auth/register?stayLogged=${stayLoggedIn}&mode=${mode}`, {
@@ -127,7 +129,7 @@ export async function register(data: {
         headers: {
             "Content-Type": "application/json"
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(sendingData),
         credentials: "include"
     });
 }
@@ -137,4 +139,48 @@ export async function getAuthenticationOptions(): Promise<PublicKeyCredentialReq
         credentials: "include"
     });
     return parseLoginOptions(await response.json());
+}
+
+type PasswordResponse = {
+    hash: number[]
+    email: string,
+}
+
+export async function authenticate(data: PublicKeyCredentialWithAssertion | PasswordResponse, stayLogged: boolean, key: number[], iv: number[]): Promise<Response> {
+    let authResponse: AuthenticationResponse | PasswordResponse;
+    if ("hash" in data) {
+        authResponse = data;
+    } else {
+        authResponse = {
+            id: data.id,
+            rawId: asBase64url(data.rawId),
+            type: data.type,
+            response: {
+                clientDataJSON: asBase64url(data.response.clientDataJSON),
+                authenticatorData: asBase64url(data.response.authenticatorData),
+                signature: asBase64url(data.response.signature),
+                userHandle: data.response.userHandle ? asBase64url(data.response.userHandle) : null
+            }
+        };
+    }
+
+    // todo default values are returned by server
+    return fetch(`${apiUrl}/auth/authenticate?stayLogged=${stayLogged}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            ...authResponse,
+            encryptedKey: key,
+            iv: iv
+        }),
+        credentials: "include"
+    });
+}
+
+export async function validateEmail(email: string): Promise<Response> {
+    return fetch(`${apiUrl}/auth/email-verification?email=${email}`, {
+        credentials: "include"
+    });
 }

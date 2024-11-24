@@ -3,9 +3,13 @@
     import {Checkbox} from "@components/ui/checkbox";
     import {Label} from "@components/ui/label";
     import Info from "@components/Info.svelte";
-    import {onMount} from "svelte";
-    import {sessionRedirect} from "@util/sessionRedirect";
-    import {parseLoginAssertion, parseLoginOptions, type PublicKeyCredentialWithAssertion} from "@api/auth";
+    import {
+        authenticate,
+        getAuthenticationOptions,
+        parseLoginAssertion,
+        parseLoginOptions,
+        type PublicKeyCredentialWithAssertion
+    } from "@api/auth";
     import {Button} from "@components/ui/button";
 
     const apiUrl = import.meta.env.PUBLIC_API_URL;
@@ -13,36 +17,21 @@
     let error = '';
     let stayLogged = false;
 
-    onMount(async () => {
-        const to = await sessionRedirect(apiUrl)
-        if (to) navigate(to)
-    });
-
     async function login() {
-        const response = await fetch(`${apiUrl}/auth/login-options`, {
-            credentials: "include",
-        });
-        const options = parseLoginOptions(await response.json());
+        const opts = await getAuthenticationOptions();
 
         const assertion: PublicKeyCredentialWithAssertion | null = await navigator.credentials.get({
-            publicKey: options
+            publicKey: opts
         }) as PublicKeyCredentialWithAssertion;
         if (!assertion) return;
 
-        const loginResponse = await fetch(`${apiUrl}/auth/login?stayLogged=${stayLogged}`, {
-            credentials: "include",
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(parseLoginAssertion(assertion))
-        });
+        const authenticationResponse = await authenticate(assertion, stayLogged);
 
-        if (!loginResponse.ok) {
-            throw new Error(`${loginResponse.status}`);
+        if (!authenticationResponse.ok) {
+            throw new Error(`${authenticationResponse.status}`);
         }
 
-        const user = await loginResponse.json();
+        const user = await authenticationResponse.json();
         if (user.setupStep !== -1) {
             navigate(`/signup/step${user.setupStep}`);
         } else {

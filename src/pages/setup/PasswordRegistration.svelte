@@ -3,23 +3,23 @@
     import {Label} from "@components/ui/label";
     import {Button} from "@components/ui/button";
     import {navigate} from "astro:transitions/client";
-    import {deriveKey, encryptAESKey, generateAESKey, generateSalt, hashSHA256} from "@util/encryption/keys";
+    import {deriveKey, encryptAESKey, generateAESKey, hashSHA256} from "@util/encryption/keys";
     import {passwordError} from "./setupStore";
     import ErrorAlert from "@components/ErrorAlert.svelte";
     import {getRegistrationOptions, register} from "@api/auth";
     import {Checkbox} from "@components/ui/checkbox";
     import Info from "@components/Info.svelte";
-
-    const apiUrl = import.meta.env.PUBLIC_API_URL;
-    const mailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    import {onMount} from "svelte";
 
     let stayLogged = false;
-
     let email = '';
-    let emailBlurred = false;
-
     let password = '';
     let confirm = '';
+
+    onMount(() => {
+        let e = localStorage.getItem("email");
+        if (e) email = e;
+    });
 
     $: match = password === confirm && password.length > 0;
     $: strongPassword = function (): string {
@@ -31,22 +31,20 @@
         if (!/[^A-Za-z0-9]/.test(password)) return "Password must contain at least one special character";
         return '';
     }()
-    $: emailError = emailBlurred && email.length > 0 && !mailRegex.test(email);
-    $: canContinue = match && email.length > 0 && mailRegex.test(email);
 
     async function handleContinue() {
-        const opts = await getRegistrationOptions("pass")
+        const opts = await getRegistrationOptions("pass", email)
 
         const derivedKey = await deriveKey(
             new TextEncoder().encode(password),
             new TextEncoder().encode(opts.salt))
         const key = await generateAESKey()
-        const encryptedKey = await encryptAESKey(derivedKey, key)
+        const { encryptedKey, iv } = await encryptAESKey(derivedKey, key)
 
         const response = await register({
-            encryptedKey: Array.from(new TextEncoder().encode(encryptedKey)),
+            iv: iv,
+            encryptedKey: encryptedKey,
             hash: Array.from(new Uint8Array(await hashSHA256(password))),
-            email: email,
         }, stayLogged)
 
         if (!response.ok) {
@@ -62,19 +60,7 @@
 
 <ErrorAlert store={passwordError} />
 <form class="flex flex-col gap-4"
-      on:submit={() => {if (canContinue) handleContinue()}}>
-    <div class="flex flex-col gap-1">
-        <Label for="email">Email</Label>
-        <Input id="email"
-               on:blur={() => emailBlurred = true}
-               bind:value={email}
-               placeholder="Your Email"
-               autocomplete="email" />
-        {#if emailError}
-            <p class="text-rose-600 text-sm">Please enter a valid email</p>
-        {/if}
-    </div>
-
+      on:submit={() => {if (match) handleContinue()}}>
     <div class="flex flex-col gap-1">
         <Label for="password">Password</Label>
         <Input id="password"
@@ -99,10 +85,10 @@
         {/if}
     </div>
 
-    <div class="flex gap-2 items-center mb-6">
+    <div class="flex gap-2 items-center mb-2">
         <Checkbox id="stayLogged" bind:checked={stayLogged} />
         <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
     </div>
 
-    <Button disabled={!canContinue} on:click={handleContinue}>Continue</Button>
+    <Button disabled={!match} on:click={handleContinue}>Continue</Button>
 </form>

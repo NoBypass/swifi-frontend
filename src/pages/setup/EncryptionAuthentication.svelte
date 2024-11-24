@@ -1,10 +1,11 @@
 <script lang="ts">
     import {
+        authenticate,
         getAuthenticationOptions,
-        type PublicKeyCredentialWithAssertion, register, type RegistrationResponse,
+        type PublicKeyCredentialWithAssertion,
     } from "@api/auth";
     import {step2Error} from "./setupStore";
-    import {deriveKey, encryptAESKey, generateAESKey} from "@util/encryption/keys";
+    import {deriveKey, encryptAESKey, generateAESKey, saveKey} from "@util/encryption/keys";
     import {type PRFExtension, type PRFExtensionWithResults} from "@util/encryption/util";
     import {Button} from "@components/ui/button";
     import { navigate } from 'astro:transitions/client';
@@ -12,8 +13,10 @@
     import Info from "@components/Info.svelte";
     import {Label} from "@components/ui/label";
     import * as Icon from "@components/ui/icon";
+    import Loader from "@components/dynamic/Loader.svelte";
 
     let stayLogged = false;
+    let loading = false;
 
     async function handleRegistration() {
         const opts = await getAuthenticationOptions();
@@ -30,26 +33,21 @@
 
         const derivedKey = await deriveKey((prfResults as PRFExtensionWithResults).prf.results.first, new TextEncoder().encode(""));
         const key = await generateAESKey()
-        const encryptedKey = await encryptAESKey(derivedKey, key)
+        const { encryptedKey, iv } = await encryptAESKey(derivedKey, key)
 
-        const registrationCredential: RegistrationResponse = JSON.parse(localStorage.getItem("registrationCredential")!);
-        const response = await register({
-            encryptedKey: Array.from(new TextEncoder().encode(encryptedKey)),
-            credential: registrationCredential,
-        }, stayLogged)
+        const response = await authenticate(assertion, stayLogged, encryptedKey, iv);
 
         if (!response.ok) {
             throw new Error("An error occurred while setting up encryption. Please try again.");
         }
 
-        localStorage.setItem("encryptionKey", new TextDecoder().decode(key));
-        localStorage.removeItem("registrationCredential");
-
+        saveKey(key);
         navigate("/setup/step3")
     }
 
     async function handleClick() {
         step2Error.set("");
+        loading = true;
         try {
             await handleRegistration();
             step2Error.set("");
@@ -62,24 +60,23 @@
                 step2Error.set(e.message);
             }
         }
+        loading = false;
     }
 </script>
 
-<div class="mt-2 flex flex-col">
-    <div class="flex gap-2 items-center">
+<div class="mt-2 flex flex-col items-center">
+    <div class="w-full my-4 flex gap-2 justify-center items-center">
         <Checkbox id="stayLogged" bind:checked={stayLogged} />
         <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
     </div>
-    <Button class="flex gap-3 mt-4" on:click={handleClick}>
-        <Icon.Passkey />
+    <Button class="w-64 mb-6" on:click={handleClick}>
+        <Icon.Passkey variant="dark" />
         Encrypt my Data
+        {#if loading}
+            <Loader borderB="border-b-black" class="justify-self-end"/>
+        {/if}
     </Button>
     {#if $step2Error !== ""}
-        <Button size="noPadding"
-                class="self-start"
-                variant="link"
-                on:click={() => navigate("/setup/password")}>
-            Use Password Instead
-        </Button>
+        <a class="text-sm" href="/setup/password">Use Password Instead</a>
     {/if}
 </div>

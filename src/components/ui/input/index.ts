@@ -2,13 +2,13 @@ import Root from "./input.svelte";
 import { type VariantProps, tv } from "tailwind-variants";
 
 export const inputVariants = tv({
-	base: "cursor-text flex border px-2 rounded-lg has-[:focus]:outline has-[:focus]:outline-offset-2 outline-offset-0 duration-150 outline-1 transition-all",
+	base: "cursor-text outline-offset-0 flex border px-2 outline outline-1 has-[:focus]:outline-2 hover:outline-black rounded-lg transition-all duration-150 relative",
 	variants: {
 		variant: {
-			default: 'border-neutral-400 has-[:focus]:border-indigo-500 outline-indigo-300',
-			success: 'border-emerald-600 has-[:focus]:border-emerald-500 outline-emerald-300',
-			error: 'border-rose-600 has-[:focus]:border-rose-500 outline-rose-300',
-			warn: 'border-amber-600 has-[:focus]:border-amber-500 outline-amber-300'
+			default: 'outline-neutral-400 has-[:focus]:outline-blue-500',
+			success: 'outline-emerald-400 has-[:focus]:outline-emerald-500',
+			error: 'outline-rose-400 has-[:focus]:outline-rose-500',
+			warn: 'outline-amber-400 has-[:focus]:outline-amber-500'
 		},
 	},
 	defaultVariants: {

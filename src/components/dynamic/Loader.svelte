@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let borderB = 'border-b-indigo-500';
+  export let borderB = 'border-b-blue-500';
   let className = '';
   export { className as class }
 </script>

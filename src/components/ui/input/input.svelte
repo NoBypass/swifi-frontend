@@ -6,11 +6,13 @@
 	type $$Events = InputEvents;
 	type $$Props = HTMLInputAttributes & {
 		variant?: Variant;
+		insetLabel?: string;
 	};
 
 	let className: $$Props["class"] = undefined;
 	export let value: $$Props["value"] = undefined;
 	export let variant: $$Props["variant"] = "default";
+	export let insetLabel: $$Props["insetLabel"] = undefined;
 	export let censorFn: (value: string) => string = (value) => value;
 	export { className as class };
 
@@ -25,7 +27,7 @@
 	let inputElem: HTMLInputElement | null = null
 
 	$: {
-		if (value !== '' && inputElem) {
+		if (value && inputElem) {
 			value = censorFn(value);
 			valWidth = Math.min(textWidth(value), inputElem.clientWidth);
 			cd = true;
@@ -41,7 +43,7 @@
 		requestAnimationFrame(() => {
 			if (!inputElem) return;
 			caretPos = inputElem.selectionStart || 0;
-			const textUntilCaret = value.slice(0, caretPos);
+			const textUntilCaret = value === undefined ? "" : value.slice(0, caretPos);
 			valWidth = Math.min(textWidth(textUntilCaret), inputElem.clientWidth);
 		});
 	}
@@ -64,43 +66,51 @@
 			node.parentNode!.removeEventListener('click', handleClick)
 		}}
 	}
+
+	$: insetLabelName = insetLabel ? insetLabel.replace(/ /g, "-").toLowerCase() : undefined;
 </script>
 
-<div class={inputVariants({ variant })}>
+<div class={inputVariants({ variant, className: `${insetLabel ? "pt-4" : ""}` })}>
 	<span style="transform: translateY(4px) translateX({valWidth-3}px)"
 		  class:hidden={!focused}
 		  class:animate-blink={!cd}
 		  class="absolute bg-black ml-1 w-px h-5 transition-all duration-50" />
-	<input
-			class={cn(
-		"placeholder:text-neutral-400 placeholder:text-sm py-0.5 caret-transparent w-full bg-transparent color-neutral-100 focus:outline-none",
-		className
-	)}
-			use:focusOnParentClick
-			bind:value
-			bind:this={inputElem}
-			{readonly}
-			on:blur={() => focused = false}
-			on:focus={() => focused = true}
-			on:input={updateCaretPosition}
-			on:keydown={updateCaretPosition}
-			on:mousedown={updateCaretPosition}
-			on:blur
-			on:change
-			on:click
-			on:focus
-			on:focusin
-			on:focusout
-			on:keydown
-			on:keypress
-			on:keyup
-			on:mouseover
-			on:mouseenter
-			on:mouseleave
-			on:mousemove
-			on:paste
-			on:input
-			on:wheel|passive
-			{...$$restProps}
+	{#if insetLabel}
+		<label for={insetLabelName}
+			   class:-mt-3.5={focused || value}
+			   class:text-xs={focused || value}
+			   class="cursor-text absolute -mt-1.5 ml-0 transition-all duration-150">
+			{insetLabel}
+		</label>
+	{/if}
+	<input class={cn("placeholder:text-neutral-400 placeholder:text-sm py-0.5 caret-transparent w-full bg-transparent outline-none", className)}
+		   id={insetLabelName}
+		   use:focusOnParentClick
+		   bind:value
+		   bind:this={inputElem}
+		   {readonly}
+		   on:blur={() => focused = false}
+		   on:focus={() => focused = true}
+		   on:input={updateCaretPosition}
+		   on:keydown={updateCaretPosition}
+		   on:mousedown={updateCaretPosition}
+		   on:blur
+		   on:change
+		   on:click
+		   on:focus
+		   on:focusin
+		   on:focusout
+		   on:keydown
+		   on:keypress
+		   on:keyup
+		   on:mouseover
+		   on:mouseenter
+		   on:mouseleave
+		   on:mousemove
+		   on:paste
+		   on:input
+		   on:wheel|passive
+		   {...$$restProps}
 	/>
+	<slot name="right" />
 </div>

@@ -1,8 +1,10 @@
 ---
-import PasskeySetup from "./PasskeyRegistration.svelte";
+import PasskeyRegistration from "./PasskeyRegistration.svelte";
 import AuthLayout from "../../layouts/AuthLayout.astro";
 ---
 
-<AuthLayout step={1} class="flex flex-col gap-2">
-    <PasskeySetup client:load />
+<AuthLayout class="flex flex-col gap-2 text-center">
+    <h1 class="text-xl font-bold">Welcome to Swifi</h1>
+    <p class="leading-tight">To stay secure, we use passkeys for authentication. Let's set your passkey up!</p>
+    <PasskeyRegistration client:load />
 </AuthLayout>

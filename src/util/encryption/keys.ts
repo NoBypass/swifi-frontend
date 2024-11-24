@@ -1,4 +1,5 @@
 import {createEncryptionIvPair, splitEncryptionIvPair} from "@util/encryption/iv";
+import {base64ToBinary, binaryToBase64} from "@util/encryption/util";
 
 export async function deriveKey(value: BufferSource, salt: Uint8Array) {
     const baseKey = await crypto.subtle.importKey(
@@ -34,20 +35,24 @@ export async function encryptAESKey(derivedKey: CryptoKey, aesKey: ArrayBuffer) 
         aesKey
     );
 
-    return createEncryptionIvPair(new TextDecoder().decode(encryptedAESKey), new TextDecoder().decode(iv));
+    let u = new Uint8Array(encryptedAESKey);
+
+    return {
+        encryptedKey: Array.from(u),
+        iv: Array.from(iv)
+    }
 }
 
 export async function decryptAESKey(derivedKey: CryptoKey, encryptionIvPair: string) {
     const { encryptedData, iv } = splitEncryptionIvPair(encryptionIvPair);
 
-
     const decryptedArrayBuffer = await crypto.subtle.decrypt(
         {
             name: 'AES-GCM',
-            iv: new TextEncoder().encode(iv)
+            iv: iv
         },
         derivedKey,
-        new TextEncoder().encode(encryptedData)
+        encryptedData
     );
 
     return await crypto.subtle.importKey(
@@ -59,31 +64,31 @@ export async function decryptAESKey(derivedKey: CryptoKey, encryptionIvPair: str
     );
 }
 
-export async function encryptData(aesKey: CryptoKey, data: string) {
+export async function encrypt(aesKey: CryptoKey, data: string) {
     const iv = crypto.getRandomValues(new Uint8Array(12));
     const encodedData = new TextEncoder().encode(data);
 
-    const encryptedData = new TextDecoder().decode(await crypto.subtle.encrypt(
+    const encryptedData = await crypto.subtle.encrypt(
         {
             name: 'AES-GCM',
             iv: iv
         },
         aesKey,
         encodedData
-    ));
+    );
 
-    return createEncryptionIvPair(encryptedData, new TextDecoder().decode(iv));
+    return createEncryptionIvPair(encryptedData, iv);
 }
 
-export async function decryptData(aesKey: CryptoKey, encryptionIvPair: string) {
+export async function decrypt(aesKey: CryptoKey, encryptionIvPair: string) {
     const { encryptedData, iv } = splitEncryptionIvPair(encryptionIvPair);
     const decryptedData = await crypto.subtle.decrypt(
         {
             name: 'AES-GCM',
-            iv: new TextEncoder().encode(iv)
+            iv: iv
         },
         aesKey,
-        new TextEncoder().encode(encryptedData)
+        encryptedData
     );
 
     return new TextDecoder().decode(decryptedData);
@@ -102,11 +107,31 @@ export async function generateAESKey() {
     return crypto.subtle.exportKey('raw', key);
 }
 
-export async function generateSalt(length: number) {
-    return crypto.getRandomValues(new Uint8Array(length));
-}
-
 export async function hashSHA256(data: string) {
     const encodedData = new TextEncoder().encode(data);
     return await crypto.subtle.digest('SHA-256', encodedData);
+}
+
+export async function readEncryptionKey() {
+    const key = getKey();
+
+    return await crypto.subtle.importKey(
+        'raw',
+        key,
+        { name: 'AES-GCM' },
+        true,
+        ['encrypt', 'decrypt']
+    );
+}
+
+export function saveKey(key: ArrayBuffer) {
+    localStorage.setItem("encryptionKey", binaryToBase64(key));
+}
+
+export function getKey(): ArrayBuffer {
+    const key = localStorage.getItem("encryptionKey");
+    if (!key) {
+        throw new Error("No encryption key found in localStorage");
+    }
+    return base64ToBinary(key);
 }

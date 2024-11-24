@@ -3,19 +3,23 @@
     import Loader from "@components/dynamic/Loader.svelte";
     import {
         getRegistrationOptions,
-        parseSignupCredential,
-        type PublicKeyCredentialWithTransports
+        type PublicKeyCredentialWithTransports, register, validateEmail
     } from "@api/auth";
     import {type PRFExtension, supportsPRF} from "@util/encryption/util";
     import * as Alert from "@components/ui/alert";
     import * as Icon from "@components/ui/icon";
     import {Button} from "@components/ui/button";
+    import {Input} from "@components/ui/input";
 
     let error = '';
     let awaiting = false;
+    let email = '';
+    let validatingEmail = false;
+    let emailValid = false;
+    let emailError = false;
 
     async function handleRegistration() {
-        const opts = await getRegistrationOptions("key");
+        const opts = await getRegistrationOptions("key", email);
 
         const credential: PublicKeyCredentialWithTransports | null = await navigator.credentials.create({
             publicKey: opts
@@ -25,7 +29,11 @@
             throw new Error("The authenticator you used does not yet support a required feature. Try using a different authenticator or use password-based authentication.");
         }
 
-        localStorage.setItem("registrationCredential", JSON.stringify(parseSignupCredential(credential)));
+        const response = await register(credential, true);
+
+        if (!response.ok) {
+            throw new Error("An error occurred while registering your passkey. Please try again.");
+        }
     }
 
     async function handleClick() {
@@ -45,6 +53,29 @@
         }
         awaiting = false;
     }
+
+    async function validateEmailForm() {
+        validatingEmail = true;
+        emailError = false;
+        error = '';
+
+        const response = await validateEmail(email);
+        if (!response.ok) {
+            error = "The email you entered is not valid or is already in use. Please enter a valid email.";
+            emailError = true;
+            emailValid = false;
+        } else {
+            emailValid = true;
+            localStorage.setItem("email", email);
+        }
+
+        validatingEmail = false;
+    }
+
+    function resetEmail() {
+        emailValid = false;
+        emailError = false;
+    }
 </script>
 
 {#if error !== ''}
@@ -55,23 +86,39 @@
             </svg>
             An error occurred
         </Alert.Title>
-        <Alert.Description class="leading-tight">{error}</Alert.Description>
+        <Alert.Description class="leading-tight text-left max-w-md">{error}</Alert.Description>
     </Alert.Root>
 {/if}
-<h1 class="text-xl font-bold">Welcome to Swifi</h1>
-<p class="text-neutral-600 leading-tight">To stay secure, we use passkeys for authentication. Let's set your passkey up!</p>
-<div class="h-32 text-center flex flex-col gap-2">
-    <Button class="mt-4" on:click={handleClick}>
-        <Icon.Passkey />
-        <p class="w-16">Set up</p>
-        {#if awaiting}
-            <Loader borderB="border-b-white" class="justify-self-end"/>
-        {/if}
-    </Button>
-    <Button class="self-start p-0 text-neutral-500 hover:decoration-neutral-500"
-            href="/setup/password"
-            size="sm"
-            variant="link">
-        Use Password instead (less secure)
-    </Button>
-</div>
+<form class="text-center flex flex-col gap-2 mb-6">
+    <Input insetLabel="Email"
+           variant={emailValid ? "success" : (emailError ? "error" : "default")}
+           bind:value={email}
+           on:input={resetEmail}
+           autocomplete="email"
+           on:keydown={(e) => e.key === 'Enter' && validateEmailForm()}>
+        <div slot="right">
+            {#if validatingEmail}
+                <Loader class="justify-self-end"/>
+            {:else if !emailValid}
+                <Button size="icon" variant="transparent" class="-mt-3" on:click={validateEmailForm}>
+                    <Icon.Right />
+                </Button>
+            {/if}
+        </div>
+    </Input>
+    {#if emailValid}
+        <div class="grid grid-cols-2 gap-2">
+            <Button on:click={handleClick}>
+                <Icon.Passkey variant="dark" />
+                <p class="text-sm">Set up Passkey</p>
+                {#if awaiting}
+                    <Loader borderB="border-b-black" class="justify-self-end"/>
+                {/if}
+            </Button>
+            <Button on:click={() => navigate("/setup/password")} >
+                <Icon.Password size="sm" variant="dark" />
+                <p class="text-sm">Set up Password (less secure)</p>
+            </Button>
+        </div>
+    {/if}
+</form>

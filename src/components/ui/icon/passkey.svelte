@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { type Props, iconVariants } from "./index";
+    import {type Props, iconVariants} from "./index";
     import {cn} from "@util/shadcn";
 
     type $$Props = Props;

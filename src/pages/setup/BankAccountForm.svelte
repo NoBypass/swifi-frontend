@@ -4,12 +4,10 @@
     import Selector from "@components/Selector.svelte";
     import { navigate } from "astro:transitions/client";
     import {onMount} from "svelte";
-    import {sessionRedirect} from "@util/sessionRedirect";
     import {moneyRegex} from "@util/strings";
     import {type Currency, getCurrencies} from "@api/currency";
+    import {encrypt, readEncryptionKey} from "@util/encryption/keys";
     import {createBankAccounts} from "@api/bankAccount";
-
-    const apiUrl = import.meta.env.PUBLIC_API_URL;
 
     // TODO make it possible to provide currency but not balance and make error messages more descriptive
 
@@ -18,6 +16,7 @@
     let balance = "";
     let currencies: Currency[] = [];
     let error = "";
+    let encryptionKey: CryptoKey | undefined = undefined;
     let accounts: {
         name: string;
         balance: string;
@@ -31,19 +30,20 @@
         currencies = await getCurrencies();
         accounts = JSON.parse(localStorage.getItem("accounts") || "[]");
 
-        const to = await sessionRedirect(apiUrl)
-        if (to) navigate(to);
+        encryptionKey = await readEncryptionKey();
     });
 
     async function addAccounts() {
         error = "";
-        const response = await createBankAccounts([...accounts.map((a) => {
+        const encryptedAccounts = await Promise.all(accounts.map(async (a) => {
             return {
-                name: a.name.trim(),
-                balance: Number(a.balance),
+                name: await encrypt(encryptionKey!, a.name),
+                balance: await encrypt(encryptionKey!, a.balance),
                 currency: a.currency,
             };
-        })])
+        }));
+
+        const response = await createBankAccounts(encryptedAccounts)
 
         if (!response.ok) {
             error = (await response.json()).message;
@@ -58,7 +58,7 @@
         accounts = [
             ...accounts,
             {
-                name: accountName,
+                name: accountName.trim(),
                 balance: balance,
                 currency: selectedCurrency,
             },
@@ -83,11 +83,11 @@
     }
 </script>
 
-<section class="border-b border-neutral-300 pb-2">
+<section class="border-b border-neutral-300 pb-2 text-center">
     <h1 class="font-bold text-lg">Your Accounts</h1>
-    <p class="text-neutral-600 leading-tight">Enter at least one bank account here. You don't have to enter a balance but you will be able to view more statistics if you do. You can edit the accounts later.</p>
+    <p class="text-neutral-600 leading-tight w-96">Enter at least one bank account here. You don't have to enter a balance but you will be able to view more statistics if you do. You can edit the accounts later.</p>
     {#each accounts as account}
-        <div class="flex justify-between border border-neutral-300 rounded-lg my-2 py-2 px-3">
+        <div class="text-left flex justify-between border border-neutral-300 rounded-lg my-2 py-2 px-3">
             <div>
                 <p class="font-bold">{account.name}</p>
                 <p class="text-xs text-neutral-600">{account.balance} {account.currency}</p>
@@ -122,7 +122,7 @@
         Add Bank Account
     </Button>
     <br>
-    <Button class="w-full flex gap-2 justify-center" disabled={finishButtonDisabled} on:click={addAccounts}>
+    <Button variant="primary" class="w-full flex gap-2 justify-center" disabled={finishButtonDisabled} on:click={addAccounts}>
         Finish
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M17.25 8.25 21 12m0 0-3.75 3.75M21 12H3" />

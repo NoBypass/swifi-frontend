@@ -15,4 +15,4 @@
     }
 </script>
 
-<Button on:click={handleClick} variant="link">Logout</Button>
+<Button on:click={handleClick} variant="link" class="p-0">Logout</Button>
