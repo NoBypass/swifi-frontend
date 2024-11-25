@@ -6,19 +6,21 @@
     import {
         authenticate,
         getAuthenticationOptions,
-        parseLoginAssertion,
-        parseLoginOptions,
         type PublicKeyCredentialWithAssertion
     } from "@api/auth";
     import {Button} from "@components/ui/button";
+    import * as Alert from "@components/ui/alert";
+    import * as Icon from "@components/ui/icon";
+    import Loader from "@components/dynamic/Loader.svelte";
 
-    const apiUrl = import.meta.env.PUBLIC_API_URL;
 
     let error = '';
     let stayLogged = false;
+    let awaiting = false;
 
     async function login() {
-        const opts = await getAuthenticationOptions();
+        awaiting = true;
+        const opts = await getAuthenticationOptions("key");
 
         const assertion: PublicKeyCredentialWithAssertion | null = await navigator.credentials.get({
             publicKey: opts
@@ -26,7 +28,6 @@
         if (!assertion) return;
 
         const authenticationResponse = await authenticate(assertion, stayLogged);
-
         if (!authenticationResponse.ok) {
             throw new Error(`${authenticationResponse.status}`);
         }
@@ -44,21 +45,44 @@
         try {
             await login();
         } catch (e) {
-            error = e;
+            if (!(e instanceof Error)) {
+                error = "An unknown error occurred. Please try again.";
+            } else if (e.name === "NotAllowedError") {
+                error = "The operation was aborted or timed out. Please try again.";
+            } else {
+                error = e.message;
+            }
         }
+        awaiting = false;
     }
 </script>
 
-<div class="flex gap-2 items-center mb-6">
+{#if error}
+    <Alert.Root variant="error">
+        <Alert.Title class="font-bold flex gap-2 items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="stroke-rose-600 size-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+            </svg>
+            An error occurred
+        </Alert.Title>
+        <Alert.Description class="leading-tight text-left max-w-md">{error}</Alert.Description>
+    </Alert.Root>
+{/if}
+<div class="flex gap-2 items-center my-4">
     <Checkbox id="stayLogged" bind:checked={stayLogged} />
     <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
 </div>
-<Button class="w-48 self-center" on:click={handleClick}>
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1" stroke="currentColor" class="size-6 fill-neutral-100 stroke-neutral-500">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z" />
-    </svg>
-    <p class="w-16 place-self-center">Login</p>
-</Button>
-{#if error !== ''}
-    <p class="text-sm text-rose-500">{error}</p>
-{/if}
+<div class="flex flex-col gap-2 w-64 mb-4">
+    <p class="col-span-2">Log in with</p>
+    <Button on:click={handleClick}>
+        <Icon.Passkey variant="dark" />
+        <p class="text-sm">Passkey</p>
+        {#if awaiting}
+            <Loader borderB="border-b-black" class="justify-self-end"/>
+        {/if}
+    </Button>
+    <Button on:click={() => navigate(`/login/password?stayLogged=${stayLogged}`)} >
+        <Icon.Password size="sm" variant="dark" />
+        <p class="text-sm">Password</p>
+    </Button>
+</div>

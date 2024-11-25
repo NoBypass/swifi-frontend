@@ -107,8 +107,8 @@ export async function generateAESKey() {
     return crypto.subtle.exportKey('raw', key);
 }
 
-export async function hashSHA256(data: string) {
-    const encodedData = new TextEncoder().encode(data);
+export async function hashSHA256(data: string, salt: string) {
+    const encodedData = new TextEncoder().encode(data + salt);
     return await crypto.subtle.digest('SHA-256', encodedData);
 }
 

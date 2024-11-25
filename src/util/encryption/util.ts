@@ -32,26 +32,6 @@ export function fixBase64url(input: string): string {
     return input;
 }
 
-function generateAlphanumericToken(): string {
-    const length = 24;
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    const array = new Uint8Array(length-2);
-    crypto.getRandomValues(array);
-    for (let i = 0; i < length; i++) {
-        if (i === 8 || i === 16) {
-            result += '-';
-        }
-        result += chars.charAt(array[i] % chars.length);
-    }
-    return result;
-}
-
-export function hashData(data: string, salt: string): Promise<string> {
-    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(data + salt))
-        .then(hash => btoa(String.fromCharCode(...new Uint8Array(hash))))
-}
-
 export function binaryToBase64(buf: ArrayBuffer): string {
     return btoa(String.fromCharCode(...new Uint8Array(buf)));
 }

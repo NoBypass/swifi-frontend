@@ -16,6 +16,6 @@
             </svg>
             An Error Occurred
         </Alert.Title>
-        <Alert.Description class="leading-tight">{$store}</Alert.Description>
+        <Alert.Description class="leading-tight">{data}</Alert.Description>
     </Alert.Root>
 {/if}

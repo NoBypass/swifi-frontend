@@ -82,17 +82,6 @@ export async function logout(): Promise<Response> {
     });
 }
 
-type Safe = {
-    salt: string,
-    data: string
-}
-
-type EncryptionSetup = {
-    token: Safe,
-    tokenEncryptedKey: Safe,
-    passkeyEncryptedKey: Safe
-}
-
 export async function getRegistrationOptions(mode: 'pass', email: string): Promise<{ salt: string }>;
 export async function getRegistrationOptions(mode: 'key', email: string): Promise<PublicKeyCredentialCreationOptions>;
 export async function getRegistrationOptions(mode: 'pass' | 'key', email: string): Promise<PublicKeyCredentialCreationOptions | { salt: string }> {
@@ -134,20 +123,26 @@ export async function register(data: PublicKeyCredentialWithTransports | Passwor
     });
 }
 
-export async function getAuthenticationOptions(): Promise<PublicKeyCredentialRequestOptions> {
-    const response = await fetch(`${apiUrl}/auth/authentication-options`, {
+export async function getAuthenticationOptions(mode: 'pass', email: string): Promise<string>;
+export async function getAuthenticationOptions(mode: 'key'): Promise<PublicKeyCredentialRequestOptions>;
+export async function getAuthenticationOptions(mode: 'pass' | 'key', email = ""): Promise<PublicKeyCredentialRequestOptions|string> {
+    const response = await fetch(`${apiUrl}/auth/authentication-options?mode=${mode}&email=${email}`, {
         credentials: "include"
     });
-    return parseLoginOptions(await response.json());
+    if (mode === 'key') {
+        return parseLoginOptions(await response.json());
+    } else {
+        return (await response.json()).salt;
+    }
 }
 
 type PasswordResponse = {
     hash: number[]
-    email: string,
 }
 
 export async function authenticate(data: PublicKeyCredentialWithAssertion | PasswordResponse, stayLogged: boolean, key?: number[], iv?: number[]): Promise<Response> {
     let authResponse: AuthenticationResponse | PasswordResponse;
+    let mode: 'key' | 'pass' = "hash" in data ? 'pass' : 'key';
     if ("hash" in data) {
         authResponse = data;
     } else {
@@ -164,8 +159,7 @@ export async function authenticate(data: PublicKeyCredentialWithAssertion | Pass
         };
     }
 
-    // todo default values are returned by server
-    return fetch(`${apiUrl}/auth/authenticate?stayLogged=${stayLogged}`, {
+    return fetch(`${apiUrl}/auth/authenticate?stayLogged=${stayLogged}&mode=${mode}`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"

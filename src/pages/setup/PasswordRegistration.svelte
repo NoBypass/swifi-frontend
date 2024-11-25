@@ -44,7 +44,7 @@
         const response = await register({
             iv: iv,
             encryptedKey: encryptedKey,
-            hash: Array.from(new Uint8Array(await hashSHA256(password))),
+            hash: Array.from(new Uint8Array(await hashSHA256(password, opts.salt))),
         }, stayLogged)
 
         if (!response.ok) {
