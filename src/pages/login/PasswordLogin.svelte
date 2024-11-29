@@ -37,7 +37,7 @@
             return;
         }
 
-        navigate("/dashboard/overview");
+        await navigate("/dashboard/overview");
     }
 </script>
 

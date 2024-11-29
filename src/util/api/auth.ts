@@ -140,6 +140,24 @@ type PasswordResponse = {
     hash: number[]
 }
 
+export type EncryptionKey = {
+    type: string,
+    encryptedKey: number[],
+    iv: number[],
+    hash: number[],
+    salt: number[],
+}
+
+export type User = {
+    createdAt: string,
+    email: string,
+    password: EncryptionKey,
+    passkeys: {
+        id: string,
+        key: EncryptionKey
+    }[],
+}
+
 export async function authenticate(data: PublicKeyCredentialWithAssertion | PasswordResponse, stayLogged: boolean, key?: number[], iv?: number[]): Promise<Response> {
     let authResponse: AuthenticationResponse | PasswordResponse;
     let mode: 'key' | 'pass' = "hash" in data ? 'pass' : 'key';

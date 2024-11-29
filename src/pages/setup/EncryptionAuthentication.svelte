@@ -42,7 +42,7 @@
         }
 
         saveKey(key);
-        navigate("/setup/step3")
+        await navigate("/setup/step3")
     }
 
     async function handleClick() {

@@ -55,13 +55,16 @@ export async function decryptAESKey(derivedKey: CryptoKey, encryptionIvPair: str
         encryptedData
     );
 
-    return await crypto.subtle.importKey(
-        'raw',
-        decryptedArrayBuffer,
-        { name: 'AES-GCM' },
-        true,
-        ['encrypt', 'decrypt']
-    );
+    return {
+        key: await crypto.subtle.importKey(
+            'raw',
+            decryptedArrayBuffer,
+            { name: 'AES-GCM' },
+            true,
+            ['encrypt', 'decrypt']
+        ),
+        buffer: decryptedArrayBuffer
+    };
 }
 
 export async function encrypt(aesKey: CryptoKey, data: string) {

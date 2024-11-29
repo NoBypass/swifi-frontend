@@ -4,14 +4,17 @@
     import {Label} from "@components/ui/label";
     import Info from "@components/Info.svelte";
     import {
-        authenticate,
+        authenticate, type EncryptionKey,
         getAuthenticationOptions,
-        type PublicKeyCredentialWithAssertion
+        type PublicKeyCredentialWithAssertion, type User
     } from "@api/auth";
     import {Button} from "@components/ui/button";
     import * as Alert from "@components/ui/alert";
     import * as Icon from "@components/ui/icon";
     import Loader from "@components/dynamic/Loader.svelte";
+    import {decryptAESKey, deriveKey, saveKey} from "@util/encryption/keys.ts";
+    import type {PRFExtensionWithResults} from "@util/encryption/util.ts";
+    import {createEncryptionIvPair} from "@util/encryption/iv.ts";
 
 
     let error = '';
@@ -32,11 +35,20 @@
             throw new Error(`${authenticationResponse.status}`);
         }
 
-        const user = await authenticationResponse.json();
+        const user: User = await authenticationResponse.json();
         if (user.setupStep !== -1) {
-            navigate(`/signup/step${user.setupStep}`);
+            const derivedKey = await deriveKey((prfResults as PRFExtensionWithResults).prf.results.first, new TextEncoder().encode(""));
+            let userKey: EncryptionKey | undefined = user.passkeys.find(k => k.id === btoa(assertion.id))
+            if (!userKey) {
+                throw new Error("Couldn't find passkey for user. Please try again.");
+            }
+
+            const { buffer } = await decryptAESKey(derivedKey, createEncryptionIvPair(userKey.key, userKey.iv));
+            saveKey(buffer)
+
+            await navigate(`/signup/step${user.setupStep}`);
         } else {
-            navigate(`/dashboard/overview`);
+            await navigate(`/dashboard/overview`);
         }
     }
 
