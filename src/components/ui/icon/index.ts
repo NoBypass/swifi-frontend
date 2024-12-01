@@ -3,6 +3,8 @@ import { type VariantProps, tv } from "tailwind-variants";
 import Passkey from './passkey.svelte';
 import Right from './right.svelte';
 import Password from './password.svelte';
+import Out from './out.svelte';
+import Settings from './settings.svelte';
 
 export const iconVariants = tv({
     base: "inline-block",
@@ -13,7 +15,7 @@ export const iconVariants = tv({
             primary: "fill-indigo-500",
         },
         size: {
-            sm: "size-6",
+            sm: "size-5",
             md: "size-7",
             lg: "size-10",
         },
@@ -37,4 +39,6 @@ export {
     Passkey,
     Right,
     Password,
+    Out,
+    Settings,
 };

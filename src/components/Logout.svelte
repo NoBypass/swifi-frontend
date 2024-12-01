@@ -2,6 +2,7 @@
     import {Button} from "@components/ui/button";
     import { navigate } from "astro:transitions/client";
     import {logout} from "@api/auth";
+    import * as Icon from "@components/ui/icon";
 
     async function handleClick() {
         const response = await logout();
@@ -11,8 +12,13 @@
         }
 
         localStorage.removeItem("encryptionKey");
-        navigate("/login");
+        await navigate("/login");
     }
 </script>
 
-<Button on:click={handleClick} variant="link" class="p-0">Logout</Button>
+<Button on:click={handleClick}
+        variant="transparent"
+        class="text-red-600 hover:text-red-800 transition-colors duration-150 px-2 w-full justify-start">
+    <Icon.Out size="sm" />
+    Logout
+</Button>

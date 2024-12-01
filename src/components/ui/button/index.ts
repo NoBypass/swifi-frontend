@@ -9,7 +9,7 @@ const buttonVariants = tv({
 			default: "hover:bg-neutral-300 bg-neutral-200 text-black",
 			primary: "hover:bg-blue-600 bg-blue-500 text-white",
 			secondary: "hover:bg-neutral-300 bg-neutral-200 text-neutral-800 border border-neutral-300",
-			transparent: "hover:bg-neutral-100 bg-transparent p-1",
+			transparent: "hover:bg-neutral-200 bg-transparent p-1",
 			destructive:
 				"bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
 			outline: "border border-neutral-400 hover:bg-neutral-100 focus:outline focus:outline-offset-2 outline-indigo-300 focus:border-indigo-500 outline-1",

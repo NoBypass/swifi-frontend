@@ -148,14 +148,16 @@ export type EncryptionKey = {
     salt: number[],
 }
 
+export type Passkey = {
+    id: string,
+    encryptionKey: EncryptionKey
+}
+
 export type User = {
     createdAt: string,
     email: string,
     password: EncryptionKey,
-    passkeys: {
-        id: string,
-        key: EncryptionKey
-    }[],
+    passkeys: Passkey[],
 }
 
 export async function authenticate(data: PublicKeyCredentialWithAssertion | PasswordResponse, stayLogged: boolean, key?: number[], iv?: number[]): Promise<Response> {

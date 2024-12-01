@@ -3,6 +3,7 @@
     import * as Select from "@components/ui/select";
     import {Button} from "@components/ui/button";
     import {onMount} from "svelte";
+    import {decrypt, readEncryptionKey} from "@util/encryption/keys.ts";
 
     const apiUrl = import.meta.env.PUBLIC_API_URL;
     let bankAccounts: any[] = [];
@@ -17,7 +18,12 @@
             credentials: "include",
         });
 
+        const encryptionKey = await readEncryptionKey();
+
         bankAccounts = await response.json();
+        bankAccounts.map(async (account) => {
+            account.name = await decrypt(encryptionKey, account.name);
+        });
     }
 
     onMount(async () => {

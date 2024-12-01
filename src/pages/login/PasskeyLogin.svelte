@@ -4,8 +4,8 @@
     import {Label} from "@components/ui/label";
     import Info from "@components/Info.svelte";
     import {
-        authenticate, type EncryptionKey,
-        getAuthenticationOptions,
+        authenticate,
+        getAuthenticationOptions, type Passkey,
         type PublicKeyCredentialWithAssertion, type User
     } from "@api/auth";
     import {Button} from "@components/ui/button";
@@ -13,7 +13,7 @@
     import * as Icon from "@components/ui/icon";
     import Loader from "@components/dynamic/Loader.svelte";
     import {decryptAESKey, deriveKey, saveKey} from "@util/encryption/keys.ts";
-    import type {PRFExtensionWithResults} from "@util/encryption/util.ts";
+    import {base64ToBinary, type PRFExtension, type PRFExtensionWithResults} from "@util/encryption/util.ts";
     import {createEncryptionIvPair} from "@util/encryption/iv.ts";
 
 
@@ -37,17 +37,19 @@
 
         const user: User = await authenticationResponse.json();
         if (user.setupStep !== -1) {
+            await navigate(`/signup/step${user.setupStep}`);
+        } else {
+            const prfResults: PRFExtension = assertion.getClientExtensionResults() as PRFExtension;
             const derivedKey = await deriveKey((prfResults as PRFExtensionWithResults).prf.results.first, new TextEncoder().encode(""));
-            let userKey: EncryptionKey | undefined = user.passkeys.find(k => k.id === btoa(assertion.id))
-            if (!userKey) {
+            let userKey: Passkey | undefined = user.passkeys.find(k => k.id === btoa(assertion.id))
+            if (!userKey?.encryptionKey) {
                 throw new Error("Couldn't find passkey for user. Please try again.");
             }
 
-            const { buffer } = await decryptAESKey(derivedKey, createEncryptionIvPair(userKey.key, userKey.iv));
+            console.log(userKey.encryptionKey);
+            const { buffer } = await decryptAESKey(derivedKey, createEncryptionIvPair(base64ToBinary(userKey.encryptionKey.encryptedKey), base64ToBinary(userKey.encryptionKey.iv)));
             saveKey(buffer)
 
-            await navigate(`/signup/step${user.setupStep}`);
-        } else {
             await navigate(`/dashboard/overview`);
         }
     }
