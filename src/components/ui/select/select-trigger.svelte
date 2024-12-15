@@ -12,7 +12,7 @@
 
 <SelectPrimitive.Trigger
 	class={cn(
-		"h-8 animate-all duration-150 border border-neutral-400 focus:outline focus:outline-offset-2 outline-indigo-300 focus:border-indigo-500 outline-1 placeholder:text-muted-foreground data-[placeholder]:[&>span]:text-neutral-500 flex w-full items-center justify-between whitespace-nowrap rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:opacity-50",
+		"h-8 outline-none ring-offset-0 ring-1 focus:ring-2 hover:ring-black ring-neutral-400 focus:ring-blue-500 animate-all duration-150 placeholder:text-muted-foreground data-[placeholder]:[&>span]:text-neutral-500 flex w-full items-center justify-between whitespace-nowrap rounded-md bg-transparent px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:opacity-50",
 		className
 	)}
 	{...$$restProps}

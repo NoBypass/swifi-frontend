@@ -5,6 +5,8 @@ import Right from './right.svelte';
 import Password from './password.svelte';
 import Out from './out.svelte';
 import Settings from './settings.svelte';
+import Plus from './plus.svelte';
+import Down from './down.svelte';
 
 export const iconVariants = tv({
     base: "inline-block",
@@ -36,9 +38,11 @@ export type Props = {
 };
 
 export {
+    Plus,
     Passkey,
     Right,
     Password,
     Out,
     Settings,
+    Down,
 };

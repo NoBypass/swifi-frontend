@@ -3,12 +3,13 @@
     import * as Alert from "@components/ui/alert/index.js";
     import {cn} from "@util/shadcn";
     import {Button, buttonVariants} from "@components/ui/button";
-    import Input from "@components/dynamic/Input.svelte";
     import Selector from "@components/Selector.svelte";
     import {moneyRegex} from "@util/strings";
     import {type Currency, getCurrencies} from "@api/currency";
     import {onMount} from "svelte";
     import {createBankAccounts} from "@api/bankAccount";
+    import {Input} from "@components/ui/input";
+    import {Label} from "@components/ui/label";
 
     let error = '';
     let accountName = '';
@@ -53,7 +54,7 @@
         <Dialog.Header>
             <Dialog.Title>Add a bank account</Dialog.Title>
             <Dialog.Description>
-                Add bank account here. You can add a balance to view more statistics. Anything you enter here will be encrypted and stored securely.
+                Add a bank account here. You can add a balance to view more statistics. Anything you enter here will be encrypted and stored securely.
             </Dialog.Description>
         </Dialog.Header>
 
@@ -64,9 +65,15 @@
         {/if}
 
         <form on:submit={handleSubmit} class="flex flex-col gap-4 items-center">
-            <Input bind:value={accountName} label="Account Name or IBAN" placeholder="e.g. Savings" class="w-full" />
+            <div class="flex flex-col gap-1 w-full">
+                <Label for="name">Account Name or IBAN</Label>
+                <Input id="name" bind:value={accountName} placeholder="e.g. Savings" class="w-full" />
+            </div>
             <div class="w-full grid grid-cols-[1fr_auto] gap-3 items-end">
-                <Input censorFn={moneyRegex} bind:value={balance} label="Current Balance" placeholder="(optional)" class="w-full" />
+                <div class="flex flex-col gap-1">
+                    <Label for="balance">Current Balance</Label>
+                    <Input id="balance" censorFn={moneyRegex} bind:value={balance} label="Current Balance" placeholder="(optional)" class="w-full" />
+                </div>
                 <Selector bind:value={selectedCurrency} placeholder="Search for Currency..." heading="Currencies" data={currencies} />
             </div>
             <Button type="submit" class="flex gap-2 justify-center place-self-end px-8 mt-3" disabled={accountName === "" || (selectedCurrency === "" && balance !== "")}>

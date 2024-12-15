@@ -1,5 +1,6 @@
 <script lang="ts">
-    import Input from "@components/dynamic/Input.svelte";
+    import {Input} from "@components/ui/input";
+    import {Label} from "@components/ui/label";
     import * as Select from "@components/ui/select";
     import {Button} from "@components/ui/button";
     import {onMount} from "svelte";
@@ -31,7 +32,10 @@
     });
 </script>
 
-<Input bind:value={transactionName} label="Transaction Name" maxlength={512} class="w-96" />
+<div class="flex flex-col gap-1">
+    <Label for="tname">Transaction Name</Label>
+    <Input id="tname" bind:value={transactionName} maxlength={512} class="w-96" placeholder="Enter a name" />
+</div>
 
 <Button size="icon" variant="outline">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">

@@ -79,5 +79,7 @@ class Middleware {
                 return m.fn(this.context, this.next);
             }
         }
+
+        return this.next();
     }
 }
