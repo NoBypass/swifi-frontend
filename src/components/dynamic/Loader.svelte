@@ -1,7 +1,11 @@
 <script lang="ts">
-  export let borderB = 'border-b-blue-500';
-  let className = '';
-  export { className as class }
+  interface Props {
+    borderB?: string;
+    class?: string;
+  }
+
+  let { borderB = 'border-b-blue-500', class: className = '' }: Props = $props();
+  
 </script>
 
 <div class="relative flex w-6 h-6 {className}">

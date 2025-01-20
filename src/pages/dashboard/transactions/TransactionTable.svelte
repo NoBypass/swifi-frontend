@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import {createRender, createTable, Render, Subscribe} from "svelte-headless-table";
     import {
         addSelectedRows,
@@ -82,16 +84,20 @@
     const { hiddenColumnIds } = pluginStates.hide;
 
     const ids = flatColumns.map((col) => col.id);
-    let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
+    let hideForId = $state(Object.fromEntries(ids.map((id) => [id, true])));
     hideForId["id"] = false;
 
-    $: $hiddenColumnIds = Object.entries(hideForId)
-        .filter(([, hide]) => !hide)
-        .map(([id]) => id);
+    run(() => {
+        $hiddenColumnIds = Object.entries(hideForId)
+            .filter(([, hide]) => !hide)
+            .map(([id]) => id);
+    });
 
     const hidableCols = ["account", "at", "labels", "merchant"];
 
-    $: console.log($selectedDataIds);
+    run(() => {
+        console.log($selectedDataIds);
+    });
 </script>
 
 <Button variant="outline" on:click={() => {
@@ -99,11 +105,13 @@
 }}>{hideForId["id"] ? "Cancel" : "Select"}</Button>
 
 <DropdownMenu.Root>
-    <DropdownMenu.Trigger asChild let:builder>
-        <Button variant="outline" class="ml-auto" builders={[builder]}>
-            Columns <Icon.Down size="sm" />
-        </Button>
-    </DropdownMenu.Trigger>
+    <DropdownMenu.Trigger asChild >
+        {#snippet children({ builder })}
+                <Button variant="outline" class="ml-auto" builders={[builder]}>
+                Columns <Icon.Down size="sm" />
+            </Button>
+                    {/snippet}
+        </DropdownMenu.Trigger>
     <DropdownMenu.Content>
         {#each flatColumns as col}
             {#if hidableCols.includes(col.id)}
@@ -122,11 +130,13 @@
                 <Subscribe rowAttrs={headerRow.attrs()}>
                     <Table.Row>
                         {#each headerRow.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs props={cell.props()}>
-                                <Table.Head {...attrs}>
-                                    <Render of={cell.render()} />
-                                </Table.Head>
-                            </Subscribe>
+                            <Subscribe attrs={cell.attrs()}  props={cell.props()}>
+                                {#snippet children({ attrs })}
+                                                                <Table.Head {...attrs}>
+                                        <Render of={cell.render()} />
+                                    </Table.Head>
+                                                                                            {/snippet}
+                                                        </Subscribe>
                         {/each}
                     </Table.Row>
                 </Subscribe>
@@ -134,17 +144,21 @@
         </Table.Header>
         <Table.Body {...$tableBodyAttrs}>
             {#each $pageRows as row (row.id)}
-                <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-                    <Table.Row {...rowAttrs} data-state={$selectedDataIds[row.id] && "selected"}>
-                        {#each row.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs>
-                                <Table.Cell {...attrs}>
-                                    <Render of={cell.render()} />
-                                </Table.Cell>
-                            </Subscribe>
-                        {/each}
-                    </Table.Row>
-                </Subscribe>
+                <Subscribe rowAttrs={row.attrs()} >
+                    {#snippet children({ rowAttrs })}
+                                        <Table.Row {...rowAttrs} data-state={$selectedDataIds[row.id] && "selected"}>
+                            {#each row.cells as cell (cell.id)}
+                                <Subscribe attrs={cell.attrs()} >
+                                    {#snippet children({ attrs })}
+                                                                <Table.Cell {...attrs}>
+                                            <Render of={cell.render()} />
+                                        </Table.Cell>
+                                                                                                {/snippet}
+                                                        </Subscribe>
+                            {/each}
+                        </Table.Row>
+                                                        {/snippet}
+                                </Subscribe>
             {/each}
         </Table.Body>
     </Table.Root>

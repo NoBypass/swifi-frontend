@@ -10,10 +10,10 @@
     import {navigate} from "astro:transitions/client";
     import {onMount} from "svelte";
 
-    let email = '';
-    let password = '';
+    let email = $state('');
+    let password = $state('');
     let stayLogged = false;
-    let error = '';
+    let error = $state('');
 
     onMount(() => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -42,7 +42,7 @@
 </script>
 
 <form class="flex flex-col gap-4 my-4 w-full"
-      on:submit={handleContinue}>
+      onsubmit={handleContinue}>
     <ErrorAlert {error} />
     <div class="flex flex-col gap-1">
         <Label for="email">Email</Label>

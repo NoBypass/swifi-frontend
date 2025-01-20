@@ -1,20 +1,20 @@
 ---
-import DashboardLayout from "../../../layouts/DashboardLayout.astro";
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
 import { Button } from '@components/ui/button';
 import * as Icon from '@components/ui/icon';
-import CreateLabel from "./CreateLabel.svelte";
-import LabelTable from "./LabelTable.svelte";
+import CreateLabel from './CreateLabel.svelte';
+import LabelTableWrapper from './LabelTableWrapper.astro';
 ---
 
 <DashboardLayout active="labels" class="flex gap-6">
-    <nav class="w-64 border-r border-neutral-400 pr-6">
-        <header class="flex justify-between">
-            <h1 class="text-lg">Labels</h1>
-            <CreateLabel client:load />
-        </header>
-        <LabelTable client:load />
-    </nav>
-    <main class="flex-grow">
-
-    </main>
+  <nav class="w-64 border-r border-neutral-400 pr-6">
+    <header class="flex justify-between">
+      <h1 class="text-lg">Labels</h1>
+      <CreateLabel client:load />
+    </header>
+    <LabelTableWrapper server:defer>
+      <p slot="fallback">Loading</p>
+    </LabelTableWrapper>
+  </nav>
+  <main class="flex-grow"></main>
 </DashboardLayout>

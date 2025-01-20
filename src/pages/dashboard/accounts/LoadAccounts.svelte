@@ -3,7 +3,7 @@
     import {getBankAccounts} from "@api/bankAccount.ts";
     import {onMount} from "svelte";
 
-    let accounts = [];
+    let accounts = $state([]);
 
     onMount(async () => {
         const encryptionKey = await readEncryptionKey();

@@ -1,0 +1,9 @@
+---
+import LabelTable from './LabelTable.svelte';
+import { getAllLabels } from '@api/label';
+
+const userSession = Astro.cookies.get('session')!;
+const data = await getAllLabels(userSession.value);
+---
+
+<LabelTable client:load {data} />

@@ -1,0 +1,9 @@
+---
+import CreateTransaction from './CreateTransaction.svelte';
+import { getBankAccounts } from '@api/bankAccount';
+
+const userSession = Astro.cookies.get('session')!;
+const data = await getBankAccounts(userSession.value);
+---
+
+<CreateTransaction client:load {data} />

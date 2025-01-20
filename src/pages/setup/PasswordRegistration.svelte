@@ -11,18 +11,18 @@
     import Info from "@components/Info.svelte";
     import {onMount} from "svelte";
 
-    let stayLogged = false;
+    let stayLogged = $state(false);
     let email = '';
-    let password = '';
-    let confirm = '';
+    let password = $state('');
+    let confirm = $state('');
 
     onMount(() => {
         let e = localStorage.getItem("email");
         if (e) email = e;
     });
 
-    $: match = password === confirm && password.length > 0;
-    $: strongPassword = function (): string {
+    let match = $derived(password === confirm && password.length > 0);
+    let strongPassword = $derived(function (): string {
         if (password.length === 0) return '';
         if (password.length < 8) return "Password must be at least 8 characters long";
         if (!/[A-Z]/.test(password)) return "Password must contain at least one uppercase letter";
@@ -30,7 +30,7 @@
         if (!/[0-9]/.test(password)) return "Password must contain at least one number";
         if (!/[^A-Za-z0-9]/.test(password)) return "Password must contain at least one special character";
         return '';
-    }()
+    }())
 
     async function handleContinue() {
         const opts = await getRegistrationOptions("pass", email)
@@ -59,7 +59,7 @@
 
 <ErrorAlert store={passwordError} />
 <form class="flex flex-col gap-4"
-      on:submit={() => {if (match) handleContinue()}}>
+      onsubmit={() => {if (match) handleContinue()}}>
     <div class="flex flex-col gap-1">
         <Label for="password">Password</Label>
         <Input id="password"

@@ -11,20 +11,20 @@
 
     // TODO make it possible to provide currency but not balance and make error messages more descriptive
 
-    let selectedCurrency = "";
-    let accountName = "";
-    let balance = "";
-    let currencies: Currency[] = [];
-    let error = "";
+    let selectedCurrency = $state("");
+    let accountName = $state("");
+    let balance = $state("");
+    let currencies: Currency[] = $state([]);
+    let error = $state("");
     let encryptionKey: CryptoKey | undefined = undefined;
     let accounts: {
         name: string;
         balance: string;
         currency: string;
-    }[] = [];
+    }[] = $state([]);
 
-    $: addButtonDisabled = accountName === "" || (selectedCurrency === "" && balance !== "");
-    $: finishButtonDisabled = accounts.length === 0;
+    let addButtonDisabled = $derived(accountName === "" || (selectedCurrency === "" && balance !== ""));
+    let finishButtonDisabled = $derived(accounts.length === 0);
 
     onMount(async () => {
         currencies = await getCurrencies();
@@ -107,7 +107,7 @@
         </div>
     {/each}
 </section>
-<form on:submit={handleSubmit} class="flex flex-col gap-4 items-center py-4">
+<form onsubmit={handleSubmit} class="flex flex-col gap-4 items-center py-4">
     <Input bind:value={accountName} label="Account Name or IBAN" placeholder="e.g. Savings" class="w-full" />
     <div class="w-full grid grid-cols-[1fr_auto] gap-3 items-end">
         <Input censorFn={moneyRegex} bind:value={balance} label="Current Balance" placeholder="(optional)" class="w-full" />

@@ -1,80 +1,127 @@
 <script lang="ts">
-    import {createRender, createTable, Render, Subscribe} from "svelte-headless-table";
     import {
-        addSelectedRows,
-        addHiddenColumns,
-    } from "svelte-headless-table/plugins";
-    import {readable, writable, type Writable} from "svelte/store";
+        type ColumnDef,
+        getCoreRowModel,
+        type RowSelectionState,
+        type VisibilityState,
+    } from '@tanstack/table-core';
     import * as Table from "@components/ui/table";
     import * as Icon from "@components/ui/icon";
-    import {Button} from "@components/ui/button";
-    import TableCheckbox from "@components/TableCheckbox.svelte";
-    import {getAllLabels} from "@api/label.ts";
-    import {onMount} from "svelte";
+    import {
+        createSvelteTable,
+        FlexRender, renderComponent,
+    } from '@components/ui/data-table';
+    import { type Label } from '@api/label.ts';
+    import TableCheckbox from '@components/TableCheckbox.svelte';
+    import { Button } from '@components/ui/button';
+    import { labelCreateEvent } from './labelEvents.ts';
 
-    let data: Writable<{
-        id: string;
-        name: string;
-        color: string;
-    }[]> = writable([]);
+    let { data }: { data: Label[] } = $props();
 
-    onMount(async () => {
-        data.set(await getAllLabels());
+    labelCreateEvent.addListener((label: Label) => {
+        data = [...data, label];
     });
 
-    const table = createTable(data, {
-        select: addSelectedRows(),
-        hide: addHiddenColumns(),
-    });
+    let columnVisibility = $state<VisibilityState>({});
+    let rowSelection = $state<RowSelectionState>({});
+    let selecting = $state(false);
 
-    const columns = table.createColumns([
-        table.column({
-            accessor: "id",
-            header: "",
-            cell: ({ row }, { pluginStates }) => {
-                const { getRowState } = pluginStates.select;
-                const { isSelected } = getRowState(row);
+    const columns: ColumnDef<Label>[] = [
+        {
+            id: 'select',
+            cell: ({ row }) => renderComponent(TableCheckbox, {
+                checked: row.getIsSelected(),
+                onCheckedChange: (value: any) => row.toggleSelected(!!value),
+            }),
+            enableHiding: true,
+        },
+        {
+            accessorKey: 'name',
+            header: 'Name',
+        },
+        {
+            accessorKey: 'color',
+            header: 'Color',
+        }
+    ];
 
-                return createRender(TableCheckbox, {
-                    checked: isSelected,
-                });
+    const table = createSvelteTable({
+        get data() {
+            return data;
+        },
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+        onRowSelectionChange: (updater) => {
+            if (typeof updater === "function") {
+                rowSelection = updater(rowSelection);
+            } else {
+                rowSelection = updater;
+            }
+        },
+        onColumnVisibilityChange: (updater) => {
+            if (typeof updater === "function") {
+                columnVisibility = updater(columnVisibility);
+            } else {
+                columnVisibility = updater;
+            }
+        },
+        state: {
+            get rowSelection() {
+                return rowSelection;
             },
-        }),
-        table.column({accessor: "name", header: "",}),
-        table.column({accessor: "color", header: "",}),
-    ]);
+            get columnVisibility() {
+                return columnVisibility;
+            }
+        }
 
-    const { pageRows, tableAttrs, pluginStates, flatColumns, tableBodyAttrs } = table.createViewModel(columns);
-
-    const { selectedDataIds } = pluginStates.select;
-    const { hiddenColumnIds } = pluginStates.hide;
-
-    const ids = flatColumns.map((col) => col.id);
-    let hideForId = Object.fromEntries(ids.map((id) => [id, true]));
-    hideForId["id"] = false;
-
-    data.subscribe((value) => {
-        console.log(value);
     });
+
+    table.getColumn('select')!.toggleVisibility(selecting);
+
+    const select = () => {
+        table.getColumn('select')!.toggleVisibility(!selecting);
+        selecting = !selecting;
+    }
 </script>
 
-<Button variant="outline" on:click={() => hideForId["id"] = !hideForId["id"]}>{hideForId["id"] ? "Cancel" : "Select"}</Button>
+<Button onclick={select}>{selecting ? 'Cancel' : 'Select'}</Button>
 
 <div class="rounded-md border">
-    <Table.Root {...$tableAttrs}>
-        <Table.Body {...$tableBodyAttrs}>
-            {#each $pageRows as row (row.id)}
-                <Subscribe rowAttrs={row.attrs()} let:rowAttrs>
-                    <Table.Row {...rowAttrs} data-state={$selectedDataIds[row.id] && "selected"}>
-                        {#each row.cells as cell (cell.id)}
-                            <Subscribe attrs={cell.attrs()} let:attrs>
-                                <Table.Cell {...attrs}>
-                                    <Render of={cell.render()} />
-                                </Table.Cell>
-                            </Subscribe>
-                        {/each}
-                    </Table.Row>
-                </Subscribe>
+    <Table.Root>
+        <Table.Header>
+            {#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
+                <Table.Row>
+                    {#each headerGroup.headers as header (header.id)}
+                        <Table.Head>
+                            {#if !header.isPlaceholder}
+                                <FlexRender
+                                  content={header.column.columnDef.header}
+                                  context={header.getContext()}
+                                />
+                            {/if}
+                        </Table.Head>
+                    {/each}
+                </Table.Row>
+            {/each}
+        </Table.Header>
+        <Table.Body>
+            {#each table.getRowModel().rows as row (row.id)}
+                <Table.Row data-state={row.getIsSelected() && "selected"}>
+                    {#each row.getVisibleCells() as cell (cell.id)}
+                        <Table.Cell>
+                            <FlexRender
+                              content={cell.column.columnDef.cell}
+                              context={cell.getContext()}
+                            />
+                        </Table.Cell>
+                    {/each}
+                </Table.Row>
+            {:else}
+                <Table.Row>
+                    <Table.Cell colspan={columns.length} class="h-24 text-center">
+                        No labels found.
+                    </Table.Cell>
+                </Table.Row>
             {/each}
         </Table.Body>
     </Table.Root>

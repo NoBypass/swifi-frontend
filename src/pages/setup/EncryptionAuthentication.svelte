@@ -15,8 +15,8 @@
     import * as Icon from "@components/ui/icon";
     import Loader from "@components/dynamic/Loader.svelte";
 
-    let stayLogged = false;
-    let loading = false;
+    let stayLogged = $state(false);
+    let loading = $state(false);
 
     async function handleRegistration() {
         const opts = await getAuthenticationOptions();

@@ -11,12 +11,12 @@
     import {Button} from "@components/ui/button";
     import {Input} from "@components/ui/input";
 
-    let error = '';
-    let awaiting = false;
-    let email = '';
-    let validatingEmail = false;
-    let emailValid = false;
-    let emailError = false;
+    let error = $state('');
+    let awaiting = $state(false);
+    let email = $state('');
+    let validatingEmail = $state(false);
+    let emailValid = $state(false);
+    let emailError = $state(false);
 
     async function handleRegistration() {
         const opts = await getRegistrationOptions("key", email);
@@ -96,15 +96,17 @@
            on:input={resetEmail}
            autocomplete="email"
            on:keydown={(e) => e.key === 'Enter' && validateEmailForm()}>
-        <div slot="right">
-            {#if validatingEmail}
-                <Loader class="justify-self-end"/>
-            {:else if !emailValid}
-                <Button size="icon" variant="transparent" class="-mt-3" on:click={validateEmailForm}>
-                    <Icon.Right />
-                </Button>
-            {/if}
-        </div>
+        {#snippet right()}
+                <div >
+                {#if validatingEmail}
+                    <Loader class="justify-self-end"/>
+                {:else if !emailValid}
+                    <Button size="icon" variant="transparent" class="-mt-3" on:click={validateEmailForm}>
+                        <Icon.Right />
+                    </Button>
+                {/if}
+            </div>
+            {/snippet}
     </Input>
     {#if emailValid}
         <div class="grid grid-cols-2 gap-2">

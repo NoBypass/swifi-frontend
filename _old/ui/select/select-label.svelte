@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Select as SelectPrimitive } from "bits-ui";
-	import { cn } from "@util/shadcn";
+	import { cn } from "@util/shadcn.ts";
 
 	type $$Props = SelectPrimitive.LabelProps;
 

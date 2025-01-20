@@ -7,11 +7,12 @@
     import * as Icon from '@components/ui/icon';
     import * as RadioGroup from '@components/ui/radio-group';
     import {createLabel} from "@api/label.ts";
+    import { labelCreateEvent } from './labelEvents.ts';
 
-    let open = false;
-    let error = '';
-    let selectedColor = 'neutral';
-    let name = ''
+    let open = $state(false);
+    let error = $state('');
+    let selectedColor = $state('neutral');
+    let name = $state('')
 
     async function handleSubmit(event: Event) {
         event.preventDefault();
@@ -22,6 +23,11 @@
         if (!response.ok) {
             error = (await response.json()).message || 'An error occurred. Please try again.';
         } else {
+            labelCreateEvent.emit({
+                id: (await response.json()).id,
+                name: name,
+                color: selectedColor
+            });
             open = false;
             name = '';
             selectedColor = 'neutral';
@@ -49,7 +55,7 @@
             </Alert.Root>
         {/if}
 
-        <form on:submit={handleSubmit} class="flex flex-col gap-4 items-center w-full">
+        <form onsubmit={handleSubmit} class="flex flex-col gap-4 items-center w-full">
             <div class="flex flex-col gap-1 w-full">
                 <Label for="name">Label Name</Label>
                 <Input id="name" type="text" placeholder="Enter label name" bind:value={name} required />

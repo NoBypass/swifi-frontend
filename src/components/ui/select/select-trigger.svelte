@@ -1,24 +1,24 @@
 <script lang="ts">
-	import { Select as SelectPrimitive } from "bits-ui";
-	import CaretSort from "svelte-radix/CaretSort.svelte";
-	import { cn } from "@util/shadcn";
+	import { Select as SelectPrimitive, type WithoutChild } from "bits-ui";
+	import ChevronDown from "lucide-svelte/icons/chevron-down";
+	import { cn } from "@util/shadcn.js";
 
-	type $$Props = SelectPrimitive.TriggerProps;
-	type $$Events = SelectPrimitive.TriggerEvents;
-
-	let className: $$Props["class"] = undefined;
-	export { className as class };
+	let {
+		ref = $bindable(null),
+		class: className,
+		children,
+		...restProps
+	}: WithoutChild<SelectPrimitive.TriggerProps> = $props();
 </script>
 
 <SelectPrimitive.Trigger
+	bind:ref
 	class={cn(
-		"h-8 outline-none ring-offset-0 ring-1 focus:ring-2 hover:ring-black ring-neutral-400 focus:ring-blue-500 animate-all duration-150 placeholder:text-muted-foreground data-[placeholder]:[&>span]:text-neutral-500 flex w-full items-center justify-between whitespace-nowrap rounded-md bg-transparent px-3 py-2 text-sm shadow-sm disabled:cursor-not-allowed disabled:opacity-50",
+		"border-input ring-offset-background data-[placeholder]:text-muted-foreground focus:ring-ring flex h-9 w-full items-center justify-between whitespace-nowrap rounded-md border bg-transparent px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-1 disabled:cursor-not-allowed disabled:opacity-50 [&>span]:line-clamp-1",
 		className
 	)}
-	{...$$restProps}
+	{...restProps}
 >
-	<slot />
-	<div>
-		<CaretSort class="h-4 w-4 opacity-50" />
-	</div>
+	{@render children?.()}
+	<ChevronDown class="size-4 opacity-50" />
 </SelectPrimitive.Trigger>

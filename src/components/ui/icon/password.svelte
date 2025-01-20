@@ -1,17 +1,21 @@
 <script lang="ts">
-    import {type Props, iconVariants} from "./index";
-    import {cn} from "@util/shadcn";
+    import { type Props, iconVariants } from './index.ts';
+    import {cn} from "@util/shadcn.ts";
+    import type { WithElementRef } from 'bits-ui';
+    import type { HTMLAttributes } from 'svelte/elements';
 
-    type $$Props = Props;
-
-    let className: $$Props["class"] = undefined;
-    export let variant: $$Props["variant"] = undefined;
-    export let size: $$Props["size"] = undefined;
-
-    $: className = cn(iconVariants({ variant, size, className }))
+    let {
+        ref = $bindable(null),
+        class: className,
+        variant = undefined,
+        size = undefined,
+        children,
+        ...restProps
+    }: WithElementRef<HTMLAttributes<SVGElement>> & Props = $props();
 </script>
 
-<svg class={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 271.452 271.452" xml:space="preserve">
+
+<svg class={cn(iconVariants({ variant, size }), className)} {...restProps} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 271.452 271.452" xml:space="preserve">
     <path d="M250.393,69.893H21.059C9.447,69.893,0,79.34,0,90.952V180.5c0,11.612,9.447,21.06,21.059,21.06h229.333
         c11.612,0,21.06-9.447,21.06-21.06V90.952C271.452,79.34,262.005,69.893,250.393,69.893z M88.156,141.055
         c3.614,2.023,4.904,6.594,2.88,10.208c-1.375,2.455-3.924,3.837-6.551,3.837c-1.24,0-2.498-0.308-3.657-0.958l-10.042-5.623v9.206

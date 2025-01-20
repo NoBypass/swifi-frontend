@@ -4,6 +4,7 @@
   "tabWidth": 2,
   "printWidth": 80,
   "trailingComma": "es5",
+  "bracketSameLine": true,
   "plugins": [
     "prettier-plugin-svelte",
     "prettier-plugin-astro",

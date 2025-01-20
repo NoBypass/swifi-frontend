@@ -14,9 +14,23 @@ export async function createLabel(
   });
 }
 
-export async function getAllLabels(): Promise<Response> {
-  return await fetch(`${apiUrl}/label/all`, {
-    credentials: 'include',
+export type Label = {
+  id: string;
+  name: string;
+  color: string;
+};
+
+export async function getAllLabels(session: string): Promise<Label[]> {
+  const response = await fetch(`${apiUrl}/label/all`, {
     method: 'GET',
+    headers: {
+      Cookie: `session=${session}`,
+    },
   });
+
+  if (!response.ok) {
+    throw new Error('Failed to fetch labels');
+  }
+
+  return await response.json();
 }

@@ -1,14 +1,16 @@
 ---
-import DashboardLayout from "../../../layouts/DashboardLayout.astro";
-import CreateTransaction from "../CreateTransaction.svelte";
-import TransactionTable from "./TransactionTable.svelte";
+import DashboardLayout from '../../../layouts/DashboardLayout.astro';
+import CreateTransactionWrapper from './CreateTransactionWrapper.astro';
+// import TransactionTable from "./TransactionTable.svelte";
 ---
 
 <DashboardLayout active="transactions">
-    <section class="flex items-end gap-2">
-        <CreateTransaction client:load />
-    </section>
-    <section>
-        <TransactionTable client:load />
-    </section>
+  <section class="flex items-end gap-2">
+    <CreateTransactionWrapper server:defer>
+      <p slot="fallback">Loading</p>
+    </CreateTransactionWrapper>
+  </section>
+  <section>
+    <!--<TransactionTable client:load />-->
+  </section>
 </DashboardLayout>

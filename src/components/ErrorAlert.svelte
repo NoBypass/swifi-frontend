@@ -2,10 +2,14 @@
     import * as Alert from "@components/ui/alert";
     import type {PreinitializedWritableAtom} from "nanostores";
 
-    export let store: PreinitializedWritableAtom<string> | undefined = undefined;
-    export let error: string | undefined = undefined;
+    interface Props {
+        store?: PreinitializedWritableAtom<string> | undefined;
+        error?: string | undefined;
+    }
 
-    $: data = $store || error || "";
+    let { store = undefined, error = undefined }: Props = $props();
+
+    let data = $derived($store || error || "");
 </script>
 
 {#if data !== ""}

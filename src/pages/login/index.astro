@@ -1,10 +1,10 @@
 ---
-import AuthLayout from "../../layouts/AuthLayout.astro";
-import PasskeyLogin from "./PasskeyLogin.svelte";
+import AuthLayout from '../../layouts/AuthLayout.astro';
+import PasskeyLogin from './PasskeyLogin.svelte';
 ---
 
-<AuthLayout class="flex flex-col gap-2 text-center items-center" isLogin="true">
-    <h1 class="text-xl font-bold">Welcome Back!</h1>
-    <p class="text-neutral-600">Use your passkey to log in securely</p>
-    <PasskeyLogin client:load />
+<AuthLayout class="flex flex-col items-center gap-2 text-center" isLogin="true">
+  <h1 class="text-xl font-bold">Welcome Back!</h1>
+  <p class="text-neutral-600">Use your passkey to log in securely</p>
+  <PasskeyLogin client:load />
 </AuthLayout>

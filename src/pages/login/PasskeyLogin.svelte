@@ -16,10 +16,9 @@
     import {base64ToBinary, type PRFExtension, type PRFExtensionWithResults} from "@util/encryption/util.ts";
     import {createEncryptionIvPair} from "@util/encryption/iv.ts";
 
-
-    let error = '';
-    let stayLogged = false;
-    let awaiting = false;
+    let error = $state('');
+    let stayLogged = $state(false);
+    let awaiting = $state(false);
 
     async function login() {
         awaiting = true;
@@ -82,20 +81,20 @@
         <Alert.Description class="leading-tight text-left max-w-md">{error}</Alert.Description>
     </Alert.Root>
 {/if}
-<div class="flex gap-2 items-center my-4">
+<div class="flex gap-2 my-4 items-center">
     <Checkbox id="stayLogged" bind:checked={stayLogged} />
-    <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
+    <Label for="stayLogged" class="flex items-center">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
 </div>
 <div class="flex flex-col gap-2 w-64 mb-4">
     <p class="col-span-2">Log in with</p>
-    <Button on:click={handleClick}>
+    <Button onclick={handleClick}>
         <Icon.Passkey variant="dark" />
         <p class="text-sm">Passkey</p>
         {#if awaiting}
             <Loader borderB="border-b-black" class="justify-self-end"/>
         {/if}
     </Button>
-    <Button on:click={() => navigate(`/login/password?stayLogged=${stayLogged}`)} >
+    <Button onclick={() => navigate(`/login/password?stayLogged=${stayLogged}`)} >
         <Icon.Password size="sm" variant="dark" />
         <p class="text-sm">Password</p>
     </Button>

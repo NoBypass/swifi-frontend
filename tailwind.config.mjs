@@ -21,6 +21,9 @@ const config = {
       },
     },
     extend: {
+      borderWidth: {
+        3: '3px',
+      },
       animation: {
         blink: 'blink 1s linear infinite',
         'loader-linear-spin': 'loader-spin .8s linear infinite',

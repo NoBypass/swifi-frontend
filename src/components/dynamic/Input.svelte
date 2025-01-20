@@ -1,27 +1,49 @@
 <script lang="ts">
+    import { run } from 'svelte/legacy';
+
     import {createEventDispatcher, onMount} from 'svelte';
     const dispatch = createEventDispatcher()
 
-    let className = ''
-    export let storageId = ''
-    export let placeholder = ''
-    export let value = ''
-    export let label = ''
-    export let id = ''
-    export let description = ''
-    export let descriptionColor: 'neutral' | 'error' = 'neutral'
-    export let color: 'primary' | 'success' | 'error' | 'warn' = 'primary'
-    export let maxlength = 64
-    export let censorFn: (value: string) => string = (value) => value
+    interface Props {
+        class?: string;
+        storageId?: string;
+        placeholder?: string;
+        value?: string;
+        label?: string;
+        id?: string;
+        description?: string;
+        descriptionColor?: 'neutral' | 'error';
+        color?: 'primary' | 'success' | 'error' | 'warn';
+        maxlength?: number;
+        censorFn?: (value: string) => string;
+        start?: import('svelte').Snippet;
+        end?: import('svelte').Snippet;
+    }
 
-    export { className as class }
+    let {
+        class: className = '',
+        storageId = '',
+        placeholder = '',
+        value = $bindable(''),
+        label = '',
+        id = '',
+        description = '',
+        descriptionColor = 'neutral',
+        color = 'primary',
+        maxlength = 64,
+        censorFn = (value) => value,
+        start,
+        end
+    }: Props = $props();
 
-    let valWidth = 0
-    let inputElem: HTMLInputElement | null = null
-    let focused = false
-    let cd = false
+    
+
+    let valWidth = $state(0)
+    let inputElem: HTMLInputElement | null = $state(null)
+    let focused = $state(false)
+    let cd = $state(false)
     let caretPos = 0
-    let mounted = false
+    let mounted = $state(false)
 
     const colors = {
         primary: 'border-neutral-400 has-[:focus]:border-indigo-500 outline-indigo-300',
@@ -42,22 +64,7 @@
         mounted = true
     })
 
-    $: {
-        if (value !== '' && inputElem) {
-            value = censorFn(value);
-            valWidth = Math.min(textWidth(value), inputElem.clientWidth);
-            cd = true;
-            setTimeout(() => {
-                cd = false;
-            }, 1000);
-        } else {
-            valWidth = 0;
-        }
-    }
 
-    $: if (storageId !== '' && mounted) {
-        localStorage.setItem(storageId, value);
-    }
 
     function textWidth(text: string) {
         if (!inputElem) return 0
@@ -90,14 +97,31 @@
         dispatch('blur')
         focused = false
     }
+    run(() => {
+        if (value !== '' && inputElem) {
+            value = censorFn(value);
+            valWidth = Math.min(textWidth(value), inputElem.clientWidth);
+            cd = true;
+            setTimeout(() => {
+                cd = false;
+            }, 1000);
+        } else {
+            valWidth = 0;
+        }
+    });
+    run(() => {
+        if (storageId !== '' && mounted) {
+            localStorage.setItem(storageId, value);
+        }
+    });
 </script>
 
 <div class="{className} text-start">
     <label for={id} class="text-neutral-600 pl-px">{label}</label>
     <div class="cursor-text flex border px-2 rounded-lg has-[:focus]:outline has-[:focus]:outline-offset-2 outline-offset-0 duration-150 outline-1 transition-all {colors[color]}">
         <span style="transform: translateY(4px) translateX({valWidth-3}px)"
-              class="{focused ? '' : 'hidden'} absolute bg-black ml-1 w-px h-5 transition-all duration-50 {cd ? '' : 'animate-blink'}" />
-        <slot name="start" />
+              class="{focused ? '' : 'hidden'} absolute bg-black ml-1 w-px h-5 transition-all duration-50 {cd ? '' : 'animate-blink'}"></span>
+        {@render start?.()}
         <input type="text"
                id={id}
                use:focusOnParentClick
@@ -105,13 +129,13 @@
                class="placeholder:text-neutral-400 placeholder:text-sm py-0.5 caret-transparent w-full bg-transparent color-neutral-100 focus:outline-none"
                placeholder={focused ? '' : placeholder}
                bind:this={inputElem}
-               on:focus={() => focused = true}
-               on:blur={blur}
-               on:input={updateCaretPosition}
-               on:keydown={updateCaretPosition}
-               on:mousedown={updateCaretPosition}
+               onfocus={() => focused = true}
+               onblur={blur}
+               oninput={updateCaretPosition}
+               onkeydown={updateCaretPosition}
+               onmousedown={updateCaretPosition}
                bind:value />
-        <slot name="end" />
+        {@render end?.()}
     </div>
     {#if description !== ''}
         <p class="mt-1 {descColors[descriptionColor]} absolute text-sm mb-1">{description}</p>

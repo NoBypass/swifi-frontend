@@ -9,8 +9,8 @@
 	"aliases": {
 		"components": "@components/",
 		"utils": "@util/shadcn",
-		"ui": "$lib/components/ui",
-		"hooks": "$lib/hooks"
+		"ui": "@components/ui",
+		"hooks": "@components/hooks"
 	},
 	"typescript": true,
 	"registry": "https://next.shadcn-svelte.com/registry"

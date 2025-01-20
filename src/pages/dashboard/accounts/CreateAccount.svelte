@@ -11,12 +11,12 @@
     import {Input} from "@components/ui/input";
     import {Label} from "@components/ui/label";
 
-    let error = '';
-    let accountName = '';
-    let balance = '';
-    let selectedCurrency = '';
-    let currencies: Currency[] = [];
-    let open = false;
+    let error = $state('');
+    let accountName = $state('');
+    let balance = $state('');
+    let selectedCurrency = $state('');
+    let currencies: Currency[] = $state([]);
+    let open = $state(false);
 
     onMount(async () => {
         currencies = await getCurrencies();
@@ -64,7 +64,7 @@
             </Alert.Root>
         {/if}
 
-        <form on:submit={handleSubmit} class="flex flex-col gap-4 items-center">
+        <form onsubmit={handleSubmit} class="flex flex-col gap-4 items-center">
             <div class="flex flex-col gap-1 w-full">
                 <Label for="name">Account Name or IBAN</Label>
                 <Input id="name" bind:value={accountName} placeholder="e.g. Savings" class="w-full" />
