@@ -10,16 +10,15 @@
     import * as Icon from "@components/ui/icon";
     import {Button} from "@components/ui/button";
     import {Input} from "@components/ui/input";
+    import {onMount} from "svelte";
 
     let error = $state('');
     let awaiting = $state(false);
-    let email = $state('');
-    let validatingEmail = $state(false);
-    let emailValid = $state(false);
-    let emailError = $state(false);
+    let name = $state('');
+    let submitted = $state(false);
 
     async function handleRegistration() {
-        const opts = await getRegistrationOptions("key", email);
+        const opts = await getRegistrationOptions("key", name);
 
         const credential: PublicKeyCredentialWithTransports | null = await navigator.credentials.create({
             publicKey: opts
@@ -41,7 +40,7 @@
         awaiting = true;
         try {
             await handleRegistration();
-            navigate(`/setup/step2`);
+            await navigate(`/setup/step2`);
         } catch (e) {
             if (!(e instanceof Error)) {
                 error = "An unknown error occurred. Please try again.";
@@ -54,27 +53,16 @@
         awaiting = false;
     }
 
-    async function validateEmailForm() {
-        validatingEmail = true;
-        emailError = false;
-        error = '';
-
-        const response = await validateEmail(email);
-        if (!response.ok) {
-            error = "The email you entered is not valid or is already in use. Please enter a valid email.";
-            emailError = true;
-            emailValid = false;
-        } else {
-            emailValid = true;
-            localStorage.setItem("email", email);
+    onMount(() => {
+        if (localStorage.getItem("name")) {
+            name = localStorage.getItem("name") || '';
         }
+    });
 
-        validatingEmail = false;
-    }
-
-    function resetEmail() {
-        emailValid = false;
-        emailError = false;
+    function handleSubmit(e: Event) {
+        e.preventDefault();
+        localStorage.setItem("name", name);
+        navigate("/setup/step2");
     }
 </script>
 
@@ -89,35 +77,28 @@
         <Alert.Description class="leading-tight text-left max-w-md">{error}</Alert.Description>
     </Alert.Root>
 {/if}
-<form class="text-center flex flex-col gap-2 mb-6">
-    <Input insetLabel="Email"
-           variant={emailValid ? "success" : (emailError ? "error" : "default")}
-           bind:value={email}
-           on:input={resetEmail}
-           autocomplete="email"
-           on:keydown={(e) => e.key === 'Enter' && validateEmailForm()}>
+<form class="text-center flex flex-col gap-2">
+    <Input insetLabel="Name"
+           bind:value={name}
+           autocomplete="given-name"
+           class="w-96"
+           onkeydown={(e) => e.key === 'Enter' && handleSubmit(e)}>
         {#snippet right()}
-                <div >
-                {#if validatingEmail}
-                    <Loader class="justify-self-end"/>
-                {:else if !emailValid}
-                    <Button size="icon" variant="transparent" class="-mt-3" on:click={validateEmailForm}>
-                        <Icon.Right />
-                    </Button>
-                {/if}
-            </div>
-            {/snippet}
+            <Button size="icon" variant="transparent" class="-mt-3" onclick={handleSubmit} disabled={name.length===0}>
+                <Icon.Right />
+            </Button>
+        {/snippet}
     </Input>
-    {#if emailValid}
+    {#if submitted}
         <div class="grid grid-cols-2 gap-2">
-            <Button on:click={handleClick}>
+            <Button onclick={handleClick}>
                 <Icon.Passkey variant="dark" />
                 <p class="text-sm">Set up Passkey</p>
                 {#if awaiting}
                     <Loader borderB="border-b-black" class="justify-self-end"/>
                 {/if}
             </Button>
-            <Button on:click={() => navigate("/setup/password")} >
+            <Button onclick={() => navigate("/setup/password")} >
                 <Icon.Password size="sm" variant="dark" />
                 <p class="text-sm">Set up Password (less secure)</p>
             </Button>

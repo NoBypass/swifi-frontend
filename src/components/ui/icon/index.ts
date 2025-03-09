@@ -7,11 +7,13 @@ import Out from './out.svelte';
 import Settings from './settings.svelte';
 import Plus from './plus.svelte';
 import Down from './down.svelte';
+import Warning from './warning.svelte';
 
 export const iconVariants = tv({
   base: 'inline-block',
   variants: {
     variant: {
+      transparent: 'fill-transparent',
       light: 'fill-white',
       dark: 'fill-black',
       primary: 'fill-indigo-500',
@@ -24,7 +26,7 @@ export const iconVariants = tv({
   },
   defaultVariants: {
     size: 'md',
-    variant: 'light',
+    variant: 'transparent',
   },
 });
 
@@ -36,4 +38,4 @@ export type Props = {
   size?: IconSize;
 };
 
-export { Plus, Passkey, Right, Password, Out, Settings, Down };
+export { Plus, Passkey, Right, Password, Out, Settings, Down, Warning };

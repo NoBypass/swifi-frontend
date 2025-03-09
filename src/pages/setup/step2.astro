@@ -1,14 +1,12 @@
 ---
+export const prerender = false;
+
 import AuthLayout from "../../layouts/AuthLayout.astro";
-import EncryptionAuthentication from "./EncryptionAuthentication.svelte";
-import EncryptionAuthenticationAlert from "./EncryptionAuthenticationAlert.svelte";
+import RegistrationMenu from "./RegistrationMenu.svelte";
 ---
 
-<AuthLayout step={2} class="text-center">
-    <EncryptionAuthenticationAlert client:load />
-    <h1 class="font-bold text-lg">Let's set up encryption</h1>
-    <p class="text-neutral-600 leading-tight">
-        Use your passkey again to set up encryption for all of your data going forward.
-    </p>
-    <EncryptionAuthentication client:load />
+<AuthLayout class="text-center flex flex-col items-center gap-2">
+    <h1 class="font-bold text-lg">Let's set up your login method</h1>
+    <p class="leading-tight w-1/3">It is recommended to use passkeys as they are secure. Only use a password if your device does not yet support passkeys.</p>
+    <RegistrationMenu client:load />
 </AuthLayout>

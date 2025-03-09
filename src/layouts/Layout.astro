@@ -1,9 +1,9 @@
 ---
 export const prerender = true;
 
-import "@styles/app.css";
-
 const { class: className = '', title } = Astro.props;
+import { ClientRouter } from 'astro:transitions';
+import '../styles/global.css';
 ---
 
 <!doctype html>
@@ -15,8 +15,9 @@ const { class: className = '', title } = Astro.props;
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
+		<ClientRouter />
 	</head>
-	<body class={`font-sf-pro-display ${className}`}>
+	<body class={className}>
 		<slot />
 	</body>
 </html>

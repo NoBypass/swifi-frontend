@@ -4,7 +4,7 @@
 	import { type VariantProps, tv } from "tailwind-variants";
 
 	export const buttonVariants = tv({
-		base: "inline-flex gap-1 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 transition-all duration-150",
+		base: "cursor-pointer inline-flex gap-1 items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 transition-all duration-150",
 		variants: {
 			variant: {
 				default: "hover:bg-neutral-300 bg-neutral-200 text-black",

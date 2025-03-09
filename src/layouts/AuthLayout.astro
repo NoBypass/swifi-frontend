@@ -1,68 +1,39 @@
 ---
-export const prerender = false
-
-import { ViewTransitions } from 'astro:transitions';
 import Layout from "./Layout.astro";
+import { Toaster } from "@components/ui/sonner";
 
 const { class: className = '', isLogin = false } = Astro.props;
 
-const anim = {
-    old: {
-        name: 'shortSlide',
-        duration: '0.2s',
-        easing: 'ease-in',
-        direction: 'reverse',
-    },
-    new: {
-        name: 'shortSlide',
-        duration: '0.2s',
-        easing: 'ease-in-out',
-    },
-};
-
-
-// TODO fix animation
-const shortSlide = {
-    forwards: anim,
-    backwards: anim,
-};
+const _build = "bg-violet-400 bg-green-400 bg-yellow-400 bg-orange-400"
 ---
 
 <Layout class="grid h-screen place-content-center" title={`swifi - ${isLogin ? 'login' : 'setup'}`}>
-    <header class="flex justify-center mb-6" transition:name="authheader">
-        <div class="w-16 h-16 bg-red-500 rounded-lg logo-conic text-white text-3xl font-bold grid place-content-center">S</div>
+    <header transition:name="header" class="flex justify-center flex-wrap w-screen">
+        <div class="logo bg-white w-16 h-16 rounded-lg logo-conic text-white text-3xl font-bold grid place-content-center">S</div>
     </header>
-    <div transition:animate="fade" class={className}>
+    <div transition:animate="slide" class={`my-6 flex flex-clo items-center ${className}`}>
         <slot />
     </div>
-    <footer class="text-center" transition:name="authfooter">
+    <footer transition:name="footer" class="text-center">
         {
-            isLogin ? <p class="text-sm">Dont have an Account? <a href="/setup/step1">Sign Up</a></p>
-                : <p class="text-sm">Already have an Account? <a href="/login">Log In</a></p>
+            isLogin ? <p class="text-sm">Dont have an Account? <a class="underline text-blue-500" href="/setup/step1">Sign Up</a></p>
+                : <p class="text-sm">Already have an Account? <a class="underline text-blue-500" href="/login">Log In</a></p>
         }
     </footer>
+
+    <!-- TODO fix toaster not getting removed after transition -->
+    <Toaster transition:persist="toaster"
+             richColors
+             theme="light"
+             client:load />
 </Layout>
-<ViewTransitions />
 
 <style>
-    .logo-conic {
+    .logo {
         background:
-            radial-gradient(circle at 90% 80%, theme('colors.violet.400'), transparent 70px),
-            radial-gradient(circle at 80% 0%, theme('colors.green.400'), transparent 40px),
-            radial-gradient(circle at 0% 0%, theme('colors.yellow.400'), transparent 80px),
-            radial-gradient(circle at 10% 60%, theme('colors.orange.400'), transparent 30px);
-        background-blend-mode: overlay;
-    }
-
-    // TODO fix animation
-    @keyframes shortSlide {
-        0% {
-            opacity: 0;
-            transform: translateX(200px);
-        }
-        100% {
-            opacity: 1;
-            transform: translateX(0);
-        }
+          radial-gradient(circle at 90% 80%, var(--color-violet-400), transparent 70px),
+          radial-gradient(circle at 80% 0%, var(--color-green-400), transparent 40px),
+          radial-gradient(circle at 0% 0%, var(--color-yellow-400), transparent 80px),
+          radial-gradient(circle at 10% 60%, var(--color-orange-400), transparent 30px);
     }
 </style>

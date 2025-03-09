@@ -1,4 +1,5 @@
 import { asBase64url, fixBase64url } from '@util/encryption/util';
+import { handleSwifi } from '@api/util.ts';
 
 const apiUrl = import.meta.env.PUBLIC_API_URL;
 
@@ -21,6 +22,8 @@ export type AuthenticationResponse = {
     signature: string;
     userHandle: string | null;
   };
+} & {
+  encryptedKey?: string;
 };
 
 export type RegistrationResponse = {
@@ -33,9 +36,7 @@ export type RegistrationResponse = {
   };
 };
 
-export function parseLoginAssertion(
-  assertion: PublicKeyCredentialWithAssertion
-): AuthenticationResponse {
+export function parseLoginAssertion(assertion: PublicKeyCredentialWithAssertion): AuthenticationResponse {
   return {
     id: assertion.id,
     rawId: asBase64url(assertion.rawId),
@@ -65,9 +66,7 @@ export function parseSignupCredential(
   };
 }
 
-export function parseSignupOptions(
-  options: any
-): PublicKeyCredentialCreationOptions {
+export function parseSignupOptions(options: any): PublicKeyCredentialCreationOptions {
   options.challenge = Uint8Array.from(
     atob(fixBase64url(options.challenge)),
     (c) => c.charCodeAt(0)
@@ -102,54 +101,72 @@ export async function logout(): Promise<Response> {
   });
 }
 
-export async function getRegistrationOptions(
-  mode: 'pass',
-  email: string
-): Promise<{ salt: string }>;
-export async function getRegistrationOptions(
-  mode: 'key',
-  email: string
-): Promise<PublicKeyCredentialCreationOptions>;
-export async function getRegistrationOptions(
-  mode: 'pass' | 'key',
-  email: string
-): Promise<PublicKeyCredentialCreationOptions | { salt: string }> {
-  const response = await fetch(
-    `${apiUrl}/auth/registration-options?mode=${mode}&email=${email}`,
-    {
+type AuthenticationMethod = {
+  id: string;
+  encryptedKey: string;
+  type: 'password' | 'webauthn';
+  salt?: string;
+}
+
+type PasswordRegistrationResponse = {
+  salt: string;
+  ams?: AuthenticationMethod[];
+}
+
+type WebauthnRegistrationResponse = {
+  options: PublicKeyCredentialCreationOptions;
+  ams?: AuthenticationMethod[];
+}
+
+export async function getRegistrationOptions(mode: 'password', name?: string): Promise<PasswordRegistrationResponse>;
+export async function getRegistrationOptions(mode: 'webauthn', name?: string): Promise<WebauthnRegistrationResponse>;
+export async function getRegistrationOptions(mode: 'password' | 'webauthn', name?: string): Promise<WebauthnRegistrationResponse | PasswordRegistrationResponse> {
+  const params = new URLSearchParams();
+  params.append('mode', mode);
+  if (name) {
+    params.append('name', name);
+  }
+
+  const data = await handleSwifi<any>(
+    await fetch(`${apiUrl}/auth/registration-options?${params.toString()}`, {
       credentials: 'include',
     }
-  );
-  const data = await response.json();
-  if (mode === 'pass') {
-    return data;
+  ));
+
+  if (mode === 'webauthn') {
+    return {
+      options: parseSignupOptions(data.options),
+      ams: data.ams
+    }
   } else {
-    return parseSignupOptions(data);
+    return data;
   }
 }
 
 type PasswordRegistration = {
-  encryptedKey: number[];
-  iv: number[];
-  hash: number[];
+  email: string;
+  hash: string;
+  encodedKey: string;
 };
 
-export async function register(
-  data: PublicKeyCredentialWithTransports | PasswordRegistration,
-  stayLoggedIn: boolean
-): Promise<Response> {
-  let mode: 'key' | 'pass';
-  let sendingData: RegistrationResponse | PasswordRegistration;
+export async function register(data: PublicKeyCredentialWithTransports | PasswordRegistration, stayLoggedIn: boolean): Promise<void> {
+  let mode: 'password' | 'webauthn';
+  let sendingData: {
+    stayLogged: boolean;
+    webauthn?: RegistrationResponse;
+    password?: PasswordRegistration
+  } = { stayLogged: stayLoggedIn };
+
   if ('hash' in data) {
-    mode = 'pass';
-    sendingData = data;
+    mode = 'password';
+    sendingData.password = data;
   } else {
-    mode = 'key';
-    sendingData = parseSignupCredential(data);
+    mode = 'webauthn';
+    sendingData.webauthn = parseSignupCredential(data);
   }
 
-  return fetch(
-    `${apiUrl}/auth/register?stayLogged=${stayLoggedIn}&mode=${mode}`,
+  return handleSwifi(await fetch(
+    `${apiUrl}/auth/register?mode=${mode}`,
     {
       method: 'POST',
       headers: {
@@ -158,35 +175,28 @@ export async function register(
       body: JSON.stringify(sendingData),
       credentials: 'include',
     }
-  );
+  ));
 }
 
-export async function getAuthenticationOptions(
-  mode: 'pass',
-  email: string
-): Promise<string>;
-export async function getAuthenticationOptions(
-  mode: 'key'
-): Promise<PublicKeyCredentialRequestOptions>;
-export async function getAuthenticationOptions(
-  mode: 'pass' | 'key',
-  email = ''
-): Promise<PublicKeyCredentialRequestOptions | string> {
-  const response = await fetch(
+export async function getAuthenticationOptions(mode: 'password', email: string): Promise<string>;
+export async function getAuthenticationOptions(mode: 'webauthn'): Promise<PublicKeyCredentialRequestOptions>;
+export async function getAuthenticationOptions(mode: 'password' | 'webauthn', email = ''): Promise<PublicKeyCredentialRequestOptions | string> {
+  const data = await handleSwifi<any>(await fetch(
     `${apiUrl}/auth/authentication-options?mode=${mode}&email=${email}`,
     {
       credentials: 'include',
     }
-  );
-  if (mode === 'key') {
-    return parseLoginOptions(await response.json());
+  ));
+
+  if (mode === 'webauthn') {
+    return parseLoginOptions(data);
   } else {
-    return (await response.json()).salt;
+    return data.salt;
   }
 }
 
-type PasswordResponse = {
-  hash: number[];
+type PasswordAuthenticationResponse = {
+  hash: string;
 };
 
 export type EncryptionKey = {
@@ -203,54 +213,37 @@ export type Passkey = {
 };
 
 export type User = {
-  createdAt: string;
+  id: string;
+  name: string;
   setupStep: number;
-  email: string;
-  password: EncryptionKey;
-  passkeys: Passkey[];
 };
 
 export async function authenticate(
-  data: PublicKeyCredentialWithAssertion | PasswordResponse,
+  data: PublicKeyCredentialWithAssertion | PasswordAuthenticationResponse,
   stayLogged: boolean,
-  key?: number[],
-  iv?: number[]
-): Promise<Response> {
-  let authResponse: AuthenticationResponse | PasswordResponse;
-  let mode: 'key' | 'pass' = 'hash' in data ? 'pass' : 'key';
-  if ('hash' in data) {
-    authResponse = data;
+  encryptedKey?: string
+): Promise<User> {
+  let authResponse: AuthenticationResponse | PasswordAuthenticationResponse;
+  let mode: 'webauthn' | 'password' = 'hash' in data ? 'password' : 'webauthn';
+
+  if (mode === 'webauthn') {
+    authResponse = parseLoginAssertion(data as PublicKeyCredentialWithAssertion);
+    authResponse.encryptedKey = encryptedKey;
   } else {
-    authResponse = {
-      id: data.id,
-      rawId: asBase64url(data.rawId),
-      type: data.type,
-      response: {
-        clientDataJSON: asBase64url(data.response.clientDataJSON),
-        authenticatorData: asBase64url(data.response.authenticatorData),
-        signature: asBase64url(data.response.signature),
-        userHandle: data.response.userHandle
-          ? asBase64url(data.response.userHandle)
-          : null,
-      },
-    };
+    authResponse = data as PasswordAuthenticationResponse;
   }
 
-  return fetch(
+  return handleSwifi<User>(await fetch(
     `${apiUrl}/auth/authenticate?stayLogged=${stayLogged}&mode=${mode}`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        ...authResponse,
-        encryptedKey: key || null,
-        iv: iv || null,
-      }),
+      body: JSON.stringify(authResponse),
       credentials: 'include',
     }
-  );
+  ));
 }
 
 export async function validateEmail(email: string): Promise<Response> {

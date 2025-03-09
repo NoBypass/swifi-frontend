@@ -4,8 +4,7 @@
         getAuthenticationOptions,
         type PublicKeyCredentialWithAssertion,
     } from "@api/auth";
-    import {step2Error} from "./setupStore";
-    import {deriveKey, encryptAESKey, generateAESKey, saveKey} from "@util/encryption/keys";
+    import {encryptAESKey, generateAESKey} from "@util/encryption/key";
     import {type PRFExtension, type PRFExtensionWithResults} from "@util/encryption/util";
     import {Button} from "@components/ui/button";
     import { navigate } from 'astro:transitions/client';
@@ -14,50 +13,45 @@
     import {Label} from "@components/ui/label";
     import * as Icon from "@components/ui/icon";
     import Loader from "@components/dynamic/Loader.svelte";
+    import { toast } from "svelte-sonner";
 
     let stayLogged = $state(false);
     let loading = $state(false);
 
-    async function handleRegistration() {
-        const opts = await getAuthenticationOptions();
+    async function handleAuthentication() {
+        const opts = await getAuthenticationOptions("webauthn");
 
         const assertion: PublicKeyCredentialWithAssertion | null = await navigator.credentials.get({
             publicKey: opts
         }) as PublicKeyCredentialWithAssertion;
-        if (!assertion) throw new Error('Error while getting encryption key configuration');
+        if (!assertion) throw new Error('Error while generating assertion. Please try again.');
 
         const prfResults: PRFExtension = assertion.getClientExtensionResults() as PRFExtension;
         if (!prfResults || !("prf" in prfResults) || ("prf" in prfResults && "enabled" in prfResults.prf && !prfResults.prf.enabled)) {
             throw new Error("The authenticator you used does not yet support some required features. Try using a different authenticator or use password-based authentication.");
         }
 
-        const derivedKey = await deriveKey((prfResults as PRFExtensionWithResults).prf.results.first, new TextEncoder().encode(""));
-        const key = await generateAESKey()
-        const { encryptedKey, iv } = await encryptAESKey(derivedKey, key)
+        const aesKey = await generateAESKey();
+        localStorage.setItem("aesKey", aesKey);
 
-        const response = await authenticate(assertion, stayLogged, encryptedKey, iv);
+        const prf = new TextDecoder('utf-8').decode((prfResults as PRFExtensionWithResults).prf.results.first);
+        const user = await authenticate(assertion, stayLogged, await encryptAESKey(prf, aesKey));
+        localStorage.setItem("name", user.name);
 
-        if (!response.ok) {
-            throw new Error("An error occurred while setting up encryption. Please try again.");
-        }
-
-        saveKey(key);
         await navigate("/setup/step3")
     }
 
     async function handleClick() {
-        step2Error.set("");
         loading = true;
         try {
-            await handleRegistration();
-            step2Error.set("");
+            await handleAuthentication();
         } catch (e) {
             if (!(e instanceof Error)) {
-                step2Error.set("An unknown error occurred. Please try again.");
+                toast.error("An unknown error occurred. Please try again.");
             } else if (e.name === "NotAllowedError") {
-                step2Error.set("The operation was aborted or timed out. Please try again.");
+                toast.error("The operation was aborted or timed out. Please try again.");
             } else {
-                step2Error.set(e.message);
+                toast.error(e.message);
             }
         }
         loading = false;
@@ -69,14 +63,11 @@
         <Checkbox id="stayLogged" bind:checked={stayLogged} />
         <Label for="stayLogged">Stay logged in? <Info text="Stay logged in until you log out manually, otherwise for 30 days" /></Label>
     </div>
-    <Button class="w-64 mb-6" on:click={handleClick}>
+    <Button class="w-64 mb-6" onclick={handleClick}>
         <Icon.Passkey variant="dark" />
         Encrypt my Data
         {#if loading}
             <Loader borderB="border-b-black" class="justify-self-end"/>
         {/if}
     </Button>
-    {#if $step2Error !== ""}
-        <a class="text-sm" href="/setup/password">Use Password Instead</a>
-    {/if}
 </div>

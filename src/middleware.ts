@@ -3,14 +3,7 @@ import {getSetupStep} from "@api/user";
 import {redirectResponse} from "@util/astro";
 import type {APIContext, MiddlewareNext} from "astro";
 
-const basePaths = [
-    '/login',
-    '/login/password',
-    '/setup/step1',
-    '/setup/password',
-]
-
-export const onRequest = defineMiddleware(async (context, next) => {
+export const onRequest = defineMiddleware((context, next): Promise<Response> => {
     const m = new Middleware(context, next);
 
     m.use(/^\/dashboard/, async (context, next) => {
@@ -24,24 +17,18 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
     m.use(/^\/setup/, async (context, next) => {
         const session = context.cookies.get('session');
-        if (!session) {
-            if (context.url.pathname === '/setup/step1') return next();
-            return redirectResponse('/setup/step1');
-        }
+        const step = session ? await getSetupStep(session.value) : null;
 
-        const step = await getSetupStep(session.value);
-        if (!step) {
-            if (context.url.pathname === '/setup/step1') return next();
-            return redirectResponse('/setup/step1');
+        if (!session || !step) {
+            return context.url.pathname === '/setup/step1' || context.url.pathname === '/setup/step2' ? next() : redirectResponse('/setup/step1');
         }
 
         if (step === -1) {
             return redirectResponse('/dashboard/overview');
-        } else {
-            const setupStepPath = `/setup/step${step}`;
-            if (context.url.pathname === setupStepPath) return next();
-            return redirectResponse(setupStepPath);
         }
+
+        const setupStepPath = `/setup/step${step}`;
+        return context.url.pathname === setupStepPath ? next() : redirectResponse(setupStepPath);
     });
 
     m.use(/^\/login/, async (context, next) => {
@@ -73,7 +60,7 @@ class Middleware {
         });
     }
 
-    run() {
+    run(): Promise<Response> {
         for (const m of this.middlewares) {
             if (m.at.test(this.context.url.pathname)) {
                 return m.fn(this.context, this.next);
