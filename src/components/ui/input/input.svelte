@@ -26,16 +26,19 @@
 		class: className,
 		variant = "default",
 		right = undefined,
+		left = undefined,
 		...restProps
 	}: WithElementRef<HTMLInputAttributes, HTMLInputElement> & {
 		variant?: VariantProps<typeof inputVariants>["variant"];
 		insetLabel?: string;
 		right?: Snippet;
+		left?: Snippet;
 	} = $props();
 
 	let cd = $state(false)
 	let valWidth = $state(0)
 	let focused = $state(false)
+	let leftRef = $state<HTMLElement|undefined>(undefined)
 
 	$effect(() => {
 		if (value && ref) {
@@ -57,7 +60,12 @@
 			const dotWidth = ctx.measureText('•').width;
 			return text.length * dotWidth;
 		}
-		return ctx.measureText(text).width;
+
+		const textWidth = ctx.measureText(text).width;
+		if (leftRef) {
+			return textWidth + leftRef.clientWidth + parseFloat(window.getComputedStyle(leftRef).marginLeft);
+		}
+		return textWidth;
 	}
 
 	const updateCaretPosition = () => requestAnimationFrame(() => {
@@ -71,9 +79,15 @@
 </script>
 
 <div class={inputVariants({ variant, className: `${className}` })}>
+	{#if left}
+		<div bind:this={leftRef} class:mt-4={insetLabel} class="ml-2">
+			{@render left()}
+		</div>
+	{/if}
 	<span style="transform: translateY(18px) translateX({valWidth+4}px)"
 		  class:hidden={!focused}
 		  class:animate-blink={!cd}
+			class:-mt-3.5={!insetLabel}
 		  class="z-10 absolute bg-black ml-1 w-px h-5 transition-all duration-50"></span>
 	{#if insetLabel}
 		<label for={insetLabelName}
@@ -95,7 +109,7 @@
 		   {...restProps}
 	/>
 	{#if right}
-		<div class="mt-4 mr-2">
+		<div class:mt-4={insetLabel} class="mr-2">
 			{@render right()}
 		</div>
 	{/if}

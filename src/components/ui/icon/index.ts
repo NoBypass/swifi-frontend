@@ -8,6 +8,7 @@ import Settings from './settings.svelte';
 import Plus from './plus.svelte';
 import Down from './down.svelte';
 import Warning from './warning.svelte';
+import Search from './search.svelte';
 
 export const iconVariants = tv({
   base: 'inline-block',
@@ -38,4 +39,4 @@ export type Props = {
   size?: IconSize;
 };
 
-export { Plus, Passkey, Right, Password, Out, Settings, Down, Warning };
+export { Plus, Passkey, Right, Password, Out, Settings, Down, Warning, Search };

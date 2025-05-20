@@ -12,9 +12,12 @@
     import * as Alert from "@components/ui/alert";
     import * as Icon from "@components/ui/icon";
     import Loader from "@components/dynamic/Loader.svelte";
-    import {decryptAESKey, deriveKey, saveKey} from "@util/encryption/keys.ts";
-    import {base64ToBinary, type PRFExtension, type PRFExtensionWithResults} from "@util/encryption/util.ts";
-    import {createEncryptionIvPair} from "@util/encryption/iv.ts";
+    import {
+        base64ToBinary,
+        deriveAESKey,
+        type PRFExtension,
+        type PRFExtensionWithResults,
+    } from '@util/encryption/util.ts';
 
     let error = $state('');
     let stayLogged = $state(false);
@@ -22,24 +25,21 @@
 
     async function login() {
         awaiting = true;
-        const opts = await getAuthenticationOptions("key");
+        const opts = await getAuthenticationOptions("webauthn");
 
         const assertion: PublicKeyCredentialWithAssertion | null = await navigator.credentials.get({
             publicKey: opts
         }) as PublicKeyCredentialWithAssertion;
         if (!assertion) return;
 
-        const authenticationResponse = await authenticate(assertion, stayLogged);
-        if (!authenticationResponse.ok) {
-            throw new Error(`${authenticationResponse.status}`);
-        }
-
-        const user: User = await authenticationResponse.json();
+        const user = await authenticate(assertion, stayLogged); // TODO catch errors
         if (user.setupStep !== -1) {
             await navigate(`/signup/step${user.setupStep}`);
         } else {
             const prfResults: PRFExtension = assertion.getClientExtensionResults() as PRFExtension;
-            const derivedKey = await deriveKey((prfResults as PRFExtensionWithResults).prf.results.first, new TextEncoder().encode(""));
+            const derivedKey = await deriveAESKey(
+              new TextDecoder().decode((prfResults as PRFExtensionWithResults).prf.results.first),
+              new TextEncoder().encode("")); // TODO
             let userKey: Passkey | undefined = user.passkeys.find(k => k.id === btoa(assertion.id))
             if (!userKey?.encryptionKey) {
                 throw new Error("Couldn't find passkey for user. Please try again.");

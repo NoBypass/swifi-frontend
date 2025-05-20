@@ -47,7 +47,7 @@
           encodedKey: await encryptAESKey(password, aesKey)
         }, false)
 
-        await navigate("/setup/step4")
+        await navigate("/home")
       } catch (e) {
         toast.error((e as Error).message)
       }

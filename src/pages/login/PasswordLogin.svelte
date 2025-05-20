@@ -3,12 +3,10 @@
     import {Label} from "@components/ui/label";
     import {Button} from "@components/ui/button";
     import {authenticate, getAuthenticationOptions} from "@api/auth";
-    import {hashSHA256} from "@util/encryption/keys";
-    import Info from "@components/Info.svelte";
-    import {Checkbox} from "@components/ui/checkbox";
     import ErrorAlert from "@components/ErrorAlert.svelte";
     import {navigate} from "astro:transitions/client";
     import {onMount} from "svelte";
+    import { hashWithSalt } from '@util/encryption/hash.ts';
 
     let email = $state('');
     let password = $state('');
@@ -25,41 +23,29 @@
     async function handleContinue() {
         error = '';
 
-        const salt = await getAuthenticationOptions("pass", email);
-        const hash = Array.from(new Uint8Array((await hashSHA256(password, salt))));
+        const salt = await getAuthenticationOptions("password", email);
 
-        const response = await authenticate({
-            hash: hash,
+        await authenticate({ // TODO handle errors
+            hash: await hashWithSalt(password, salt),
         }, stayLogged)
-
-        if (!response.ok) {
-            error = "An error occurred while logging in. Please try again.";
-            return;
-        }
 
         await navigate("/dashboard/overview");
     }
 </script>
 
-<form class="flex flex-col gap-4 my-4 w-full"
+<form class="flex flex-col gap-4 my-4 w-1/3"
       onsubmit={handleContinue}>
     <ErrorAlert {error} />
-    <div class="flex flex-col gap-1">
-        <Label for="email">Email</Label>
-        <Input id="email"
-               bind:value={email}
-               type="email"
-               placeholder="Your Email" />
-    </div>
+    <Input id="email"
+           bind:value={email}
+           autocomplete="email"
+           insetLabel="Email" />
 
-    <div class="flex flex-col gap-1">
-        <Label for="password">Password</Label>
-        <Input id="password"
-               bind:value={password}
-               type="password"
-               autocomplete="password"
-               placeholder="Your Password" />
-    </div>
+    <Input id="password"
+           bind:value={password}
+           type="password"
+           insetLabel="Password"
+           autocomplete="current-password" />
 
-    <Button disabled={email === "" || password === ""} on:click={handleContinue}>Log In</Button>
+    <Button disabled={email === "" || password === ""} onclick={handleContinue}>Log In</Button>
 </form>

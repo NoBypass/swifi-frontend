@@ -1,6 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
 import {getSetupStep} from "@api/user";
-import {redirectResponse} from "@util/astro";
 import type {APIContext, MiddlewareNext} from "astro";
 
 export const onRequest = defineMiddleware((context, next): Promise<Response> => {
@@ -8,32 +7,35 @@ export const onRequest = defineMiddleware((context, next): Promise<Response> => 
 
     m.use(/^\/dashboard/, async (context, next) => {
         const session = context.cookies.get('session');
-        if (!session) return redirectResponse('/login');
+        if (!session) return m.redirect('/login')
 
-        const step = await getSetupStep(session.value);
-        if (step === -1) return next();
-        return redirectResponse('/setup/step1');
+        const step = await getSetupStep(session.value) || 0;
+        if (step > 3) return next();
+        return m.redirect('/setup/step1')
     });
 
     m.use(/^\/setup/, async (context, next) => {
+        const actualStep = parseInt(context.url.pathname[context.url.pathname.length - 1]);
         const session = context.cookies.get('session');
-        const step = session ? await getSetupStep(session.value) : null;
 
-        if (!session || !step) {
-            return context.url.pathname === '/setup/step1' || context.url.pathname === '/setup/step2' ? next() : redirectResponse('/setup/step1');
+        if (session) {
+            const step = await getSetupStep(session.value);
+            if (!step) {
+                if (actualStep <= 2) return next();
+                return m.redirect('/setup/step1'); // TODO handle error better
+            }
+
+            if (step > 3) return m.redirect('/home');
+            else return m.redirect(`/setup/step${step}`);
         }
 
-        if (step === -1) {
-            return redirectResponse('/dashboard/overview');
-        }
-
-        const setupStepPath = `/setup/step${step}`;
-        return context.url.pathname === setupStepPath ? next() : redirectResponse(setupStepPath);
+        if (actualStep <= 2) return next();
+        return m.redirect('/setup/step1');
     });
 
     m.use(/^\/login/, async (context, next) => {
         const session = context.cookies.get('session');
-        if (session) return redirectResponse('/dashboard/overview');
+        if (session) return m.redirect('/home');
         return next();
     });
 
@@ -68,5 +70,13 @@ class Middleware {
         }
 
         return this.next();
+    }
+
+    redirect(url: string): Promise<Response> | Response {
+        if (this.context.url.pathname === url) {
+            return this.next();
+        }
+
+        return new Response(null, { status: 302, headers: { Location: url } });
     }
 }

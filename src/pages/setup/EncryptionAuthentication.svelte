@@ -38,7 +38,7 @@
         const user = await authenticate(assertion, stayLogged, await encryptAESKey(prf, aesKey));
         localStorage.setItem("name", user.name);
 
-        await navigate("/setup/step3")
+        await navigate("/home");
     }
 
     async function handleClick() {

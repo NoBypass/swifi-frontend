@@ -234,13 +234,17 @@ export async function authenticate(
   }
 
   return handleSwifi<User>(await fetch(
-    `${apiUrl}/auth/authenticate?stayLogged=${stayLogged}&mode=${mode}`,
+    `${apiUrl}/auth/authenticate`,
     {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(authResponse),
+      body: JSON.stringify({
+        stayLogged,
+        mode,
+        password: authResponse
+      }),
       credentials: 'include',
     }
   ));
