@@ -1,0 +1,11 @@
+---
+import HomeLayout from '../../../layouts/HomeLayout.astro';
+import CapitalSourcesTable from './CapitalSourcesTable.svelte'
+---
+
+<HomeLayout active={"capital-sources"}>
+  <h1 class="text-xl mb-4">Capital Sources</h1>
+  <section class="flex justify-center items-center flex-col gap-2">
+    <CapitalSourcesTable client:load />
+  </section>
+</HomeLayout>
