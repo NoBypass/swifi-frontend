@@ -22,7 +22,7 @@
   });
 </script>
 
-<div class="rounded-md border border-neutral-400">
+<div class="rounded-md border border-neutral-400 bg-white">
   <Table.Root>
     <Table.Header>
       {#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
@@ -42,7 +42,9 @@
     </Table.Header>
     <Table.Body>
       {#each table.getRowModel().rows as row (row.id)}
-        <Table.Row class="border-b-neutral-400" data-state={row.getIsSelected() && "selected"}>
+        <Table.Row href={row.original.id ? `/capital-source/${row.original.id}` : undefined}
+                   class="border-b-neutral-400"
+                   data-state={row.getIsSelected() && "selected"}>
           {#each row.getVisibleCells() as cell (cell.id)}
             <Table.Cell>
               <FlexRender

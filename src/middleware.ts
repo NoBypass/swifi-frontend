@@ -1,5 +1,5 @@
 import { defineMiddleware } from 'astro:middleware';
-import {getSetupStep} from "@api/user";
+import { getSetupStep } from "@api_v2/modules/user.ts";
 import type {APIContext, MiddlewareNext} from "astro";
 
 export const onRequest = defineMiddleware((context, next): Promise<Response> => {

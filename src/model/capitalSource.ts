@@ -1,8 +1,9 @@
 type CapitalSourceBase = {
-  id: string;
+  id?: string;
   name: string;
   currency: string;
 };
+
 
 export type CapitalSource = CapitalSourceBase & {
   initialBalance: number;

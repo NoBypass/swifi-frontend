@@ -71,7 +71,8 @@
 	const updateCaretPosition = () => requestAnimationFrame(() => {
 		if (!ref) return;
 		const caretPos = ref.selectionStart || 0;
-		const textUntilCaret = value === undefined ? "" : value.slice(0, caretPos);
+		const strValue = String(value);
+		const textUntilCaret = value === undefined ? "" : strValue.slice(0, caretPos);
 		valWidth = Math.min(textWidth(textUntilCaret), ref.clientWidth);
 	});
 

@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const httpClient = axios.create({
-  baseURL: import.meta.env.PUBLIC_API_URL,
+  baseURL: typeof window !== 'undefined' ? '/api' : `${import.meta.env.SERVICE_URL || 'http://localhost:4321'}/api`,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -4,7 +4,7 @@ import { decryptData, encryptData } from '@util/encryption/key.ts';
 import { getAesKey } from '@api_v2/helpers.ts';
 import type { CapitalSource, CapitalSourceResponse } from '@model/capitalSource.ts';
 
-export const createCapitalSource = async (capitalSource: CapitalSource): Promise<void> => {
+export const addCapitalSource = async (capitalSource: CapitalSource): Promise<void> => {
   const aesKey = getAesKey()
 
   const encryptedInitialBalance = await encryptData(capitalSource.initialBalance.toString(), aesKey);
