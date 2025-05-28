@@ -11,7 +11,9 @@
     data: TData[];
   };
 
-  let { data, columns }: DataTableProps<TData, TValue> = $props();
+  let { data, columns, hrefBase }: DataTableProps<TData, TValue> & {
+    hrefBase?: string;
+  } = $props();
 
   const table = createSvelteTable({
     get data() {
@@ -42,7 +44,7 @@
     </Table.Header>
     <Table.Body>
       {#each table.getRowModel().rows as row (row.id)}
-        <Table.Row href={row.original.id ? `/capital-source/${row.original.id}` : undefined}
+        <Table.Row href={row.original?.id && hrefBase ? hrefBase + row.original.id : undefined}
                    class="border-b-neutral-400"
                    data-state={row.getIsSelected() && "selected"}>
           {#each row.getVisibleCells() as cell (cell.id)}

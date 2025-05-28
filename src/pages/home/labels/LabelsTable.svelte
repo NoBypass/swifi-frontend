@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { ColumnDef } from "@tanstack/table-core";
   import { DataTable } from '@components/ui/data-table';
-  import { getAllCapitalSources } from '@api_v2/index.ts';
   import type { CapitalSource } from '@model/capitalSource.ts';
   import { Button } from '@components/ui/button';
   import CreatePopup from './CreatePopup.svelte';
+  import { getAllLabels } from '@api_v2/modules/label.ts';
 
   const columns: ColumnDef<CapitalSource>[] = [
     {
@@ -12,29 +12,21 @@
       header: "Name",
     },
     {
-      accessorKey: "currency.isoCode",
-      header: "Currency",
-    },
-    {
-      accessorKey: "createdAt",
-      header: "Created At",
-    },
-    {
-      accessorKey: "initialBalance",
-      header: "Initial Balance",
+      accessorKey: "color",
+      header: "Color",
     },
   ];
 
-  const data = $state(getAllCapitalSources())
+  const data = $state(getAllLabels())
 </script>
 
 {#await data}
   <p>Loading...</p>
-{:then capitalSources}
-  <DataTable hrefBase="/home/capital-sources/" data={capitalSources} {columns} />
+{:then labels}
+  <DataTable hrefBase="/home/labels/" data={labels} {columns} />
 {:catch error}
   {#if error.status === 404}
-    <p class="opacity-80 text-sm mt-32">You dont have any Capital Sources!</p>
+    <p class="opacity-80 text-sm mt-32">You dont have any Labels!</p>
     <CreatePopup>
       <Button variant="outline" size="sm">Create one</Button>
     </CreatePopup>

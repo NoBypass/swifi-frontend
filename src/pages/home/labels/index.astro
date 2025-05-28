@@ -1,0 +1,11 @@
+---
+import HomeLayout from '../../../layouts/HomeLayout.astro';
+import LabelsTable from './LabelsTable.svelte'
+---
+
+<HomeLayout active={"labels"}>
+  <h1 class="text-xl mb-4">Labels</h1>
+  <section class="flex justify-center items-center flex-col gap-2">
+    <LabelsTable client:load />
+  </section>
+</HomeLayout>
