@@ -4,8 +4,12 @@ import {Button} from '@heroui/button';
 import {GoPasskeyFill} from "react-icons/go";
 import Link from 'next/link';
 import {Input} from '@heroui/input';
-import {Divider, Form} from "@heroui/react";
-import {FormEvent, useState} from "react";
+import {Checkbox, Divider, Form} from "@heroui/react";
+import {FormEvent, useEffect, useState} from "react";
+import {authenticate, getAuthenticationOpts, getSetupStep} from "@/api/modules/auth";
+import {capitalize} from "@/util/string";
+import {hashWithSalt} from "@/crypto/hash";
+import {useRouter} from "next/navigation";
 
 function validate({email, password}: { email: string; password: string }, serverError?: string) {
   if (serverError) return {email: true, password: true};
@@ -19,27 +23,43 @@ function validate({email, password}: { email: string; password: string }, server
 export default function LoginPage() {
   const isLogin = typeof window !== "undefined" && window.location.pathname === '/auth/login';
 
-  const [formValue, setFormValue] = useState({email: '', password: ''});
+  const router = useRouter()
+
+  const [formValue, setFormValue] = useState({email: '', password: '', stayLogged: false});
   const [touched, setTouched] = useState({email: false, password: false});
   const [isLoading, setIsLoading] = useState(false);
   const [serverError, setServerError] = useState("");
 
   const errors = validate(formValue, serverError);
 
-  const handleChange = (field: 'email' | 'password', value: string) => {
+  const handleChange = (field: 'email' | 'password' | 'stayLogged', value: string | boolean) => {
     setFormValue(f => ({...f, [field]: value}));
     setTouched(t => ({...t, [field]: true}));
     setServerError("");
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => {
-      setServerError("Server Error");
-      setIsLoading(false);
-    }, 2000);
+
+    try {
+      const opts = await getAuthenticationOpts(formValue.email)
+      const hash = await hashWithSalt(opts.salt, formValue.password);
+      await authenticate(hash);
+      router.push('/home');
+    } catch (e) {
+      setServerError(capitalize((e as Error).message) || 'Server Error');
+    }
+
+    setIsLoading(false);
   };
+
+  useEffect(() => {
+    getSetupStep()
+      .then(r => {
+        if (r === 4) router.push('/home');
+      });
+  })
 
   return (
     <main className="flex flex-col items-center justify-center h-screen">
@@ -53,7 +73,7 @@ export default function LoginPage() {
       <div className="my-6 flex flex-col items-center">
         <Button color="primary" className="w-full" startContent={<GoPasskeyFill/>}>Use Passkey</Button>
         <Divider className="my-4"/>
-        <Form onSubmit={handleSubmit} className="min-w-64 flex flex-col">
+        <Form onSubmit={handleSubmit} className="min-w-64 flex flex-col items-center">
           <Input
             label="Email"
             isRequired
@@ -62,8 +82,7 @@ export default function LoginPage() {
             errorMessage={touched.email ? errors.email : undefined}
             type="email"
             name="email"
-            autoComplete="email"
-          />
+            autoComplete="email"/>
           <Input
             label="Password"
             isRequired
@@ -72,8 +91,8 @@ export default function LoginPage() {
             errorMessage={touched.password ? errors.password : undefined}
             type="password"
             name="password"
-            autoComplete="current-password"
-          />
+            autoComplete="current-password"/>
+          <Checkbox onValueChange={v => handleChange('stayLogged', v)}>Stay Logged In</Checkbox>
           <p className="text-danger">{serverError}</p>
           <Button
             isDisabled={
@@ -85,8 +104,7 @@ export default function LoginPage() {
             }
             type="submit"
             className="w-full"
-            isLoading={isLoading}
-          >
+            isLoading={isLoading}>
             Submit
           </Button>
         </Form>
