@@ -4,7 +4,7 @@ const API_ENDPOINTS = {
     AUTHENTICATE: '/auth/authenticate',
   },
   USER: {
-    SETUP_STEP: '/user/setup-step'
+    STATUS: '/user/status'
   }
 };
 
