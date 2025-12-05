@@ -1,6 +1,9 @@
 import httpClient from '../httpClient';
 import API_ENDPOINTS from "@/api/endoints";
-import {User} from "@/model/user";
+
+export const logout = async (): Promise<void> => {
+  await httpClient.get(API_ENDPOINTS.AUTH.LOGOUT);
+}
 
 export const getStatus = async (): Promise<{
   setupStep: number;
@@ -16,6 +19,26 @@ export const getAuthenticationOpts = async (email: string): Promise<{ salt: stri
       email,
     }
   })).data;
+}
+
+export const getRegistrationOpts = async (name: string): Promise<{
+  options: PublicKeyCredentialCreationOptions,
+  ams: any[] // TODO define auth method
+}> => {
+  return (await httpClient.get(API_ENDPOINTS.AUTH.REGISTRATION_OPTIONS, {
+    params: {
+      method: 'webauthn',
+      name,
+    }
+  })).data
+}
+
+export const register = async (opts: Credential): Promise<void> => {
+  return (await httpClient.post(API_ENDPOINTS.AUTH.REGISTER, opts, {
+    params: {
+      method: 'webauthn',
+    }
+  })).data
 }
 
 type AuthenticationProps = {

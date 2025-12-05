@@ -3,7 +3,7 @@
 import {Button} from '@heroui/button';
 import {GoPasskeyFill} from "react-icons/go";
 import {Input} from '@heroui/input';
-import {Alert, Checkbox, Divider, Form} from "@heroui/react";
+import {Alert, Divider, Form} from "@heroui/react";
 import {FormEvent, useState} from "react";
 import {authenticate, getAuthenticationOpts} from "@/api/modules/auth";
 import {capitalize} from "@/util/string";
@@ -53,6 +53,8 @@ export default function LoginPage() {
 
   return (
     <div className="w-64">
+      <h1 className="font-bold text-xl">Welcome Back</h1>
+
       <Button color="primary" className="w-full" startContent={<GoPasskeyFill/>}>Use Passkey</Button>
       <Divider className="my-4"/>
       {serverError && <Alert color="danger"
